@@ -2,7 +2,7 @@
 
 const handler = async (m, { conn }) => {
   try {
-    const risposta = "*puoi amare tutti tranne blood. lui appartiene a velith.😈*";
+    const risposta = "*cazzo metti il mio nome in una frase emerito essere inutile*";
 
     await conn.sendMessage(
       m.chat,
@@ -16,7 +16,7 @@ const handler = async (m, { conn }) => {
 };
 
 // 🔥 Rileva "ti amo" anche dentro una frase
-handler.customPrefix = /(^|\s)ti\s*amo(\s|$)/i;
+handler.customPrefix = /(^|\s)bot(\s|$)/i;
 handler.command = new RegExp;
 
 export default handler;

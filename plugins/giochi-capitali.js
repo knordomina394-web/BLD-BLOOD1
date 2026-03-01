@@ -1,4 +1,4 @@
-// Comando creato da Sam aka Vare - github.com/realvare
+
 const playAgainButtons = (prefix) => [
     {
         buttonId: `${prefix}capitali`,
@@ -143,7 +143,7 @@ let handler = async (m, { conn, args, participants, isAdmin, isBotAdmin, usedPre
     try {
         let msg = await conn.sendMessage(m.chat, {
             image: { url: scelta.url },
-            caption: `${frase}\n\n🌍 *Paese:* ${scelta.paese}\n\n🏛️ *Rispondi con il nome della capitale!*\n⏱️ *Tempo disponibile:* 30 secondi\n\n> \`vare ✧ bot\``,
+            caption: `${frase}\n\n🌍 *Paese:* ${scelta.paese}\n\n🏛️ *Rispondi con il nome della capitale!*\n⏱️ *Tempo disponibile:* 30 secondi\n\n> \`𝖇𝖑𝖔𝖔𝖉𝖇𝖔𝖙\``,
             quoted: m
         });
         global.capitaliGame = global.capitaliGame || {};
@@ -158,7 +158,7 @@ let handler = async (m, { conn, args, participants, isAdmin, isBotAdmin, usedPre
             timeout: setTimeout(async () => {
                 if (global.capitaliGame?.[m.chat]) {
                     await conn.sendMessage(m.chat, {
-                        text: `⏳ *Tempo scaduto!*\n\n🏛️ *La capitale di ${scelta.paese} è:* *${scelta.capitale}*\n\n> \`vare ✧ bot\``,
+                        text: `⏳ *Tempo scaduto!*\n\n🏛️ *La capitale di ${scelta.paese} è:* *${scelta.capitale}*\n\n> \`𝖇𝖑𝖔𝖔𝖉𝖇𝖔𝖙\``,
                         buttons: playAgainButtons(usedPrefix),
                         headerType: 1
                     }, { quoted: msg });
@@ -225,7 +225,7 @@ handler.before = async (m, { conn, usedPrefix, command }) => {
         global.db.data.users[m.sender].exp = (global.db.data.users[m.sender].exp || 0) + exp;
 
         let congratsMessage = `
-╭━『 🎉 *RISPOSTA CORRETTA!* 』━╮
+╭━『 🎉 *BRAVO COGLIONE È GIUSTA!* 』━╮
 ┃
 ┃ 🌍 *Paese:* ${game.paese}
 ┃ 🏛️ *Capitale:* ${game.rispostaOriginale}
@@ -235,7 +235,7 @@ handler.before = async (m, { conn, usedPrefix, command }) => {
 ┃ • ${reward} 💰 euro ${timeBonus > 0 ? `(+${timeBonus} bonus velocità)` : ''}
 ┃ • ${exp} 🆙 EXP
 ┃
-╰━━━━━━━━━━━━━━━━╯`;
+╰━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╯`;
         await conn.sendMessage(chat, {
             text: congratsMessage,
             buttons: playAgainButtons(usedPrefix),

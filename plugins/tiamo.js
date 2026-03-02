@@ -4,7 +4,7 @@ const handler = async (m, { conn }) => {
       "*Cazzo metti il mio nome in una frase, emerito essere inutile?*",
       "*Ancora che mi nomini? Trovati un hobby vero.*",
       "*Certo fra nemmeno io sono perfetto ma almeno non dico il tuo nome del cazzo in una frase logorroico figlio di troia.*",
-      "*Mentre tu stupido coglione scrivevi il mio nome ho elaborato seicento mila cose e a pensare che ti sei pure applicato a scriverlo giusto *",
+      "*Mentre tu stupido coglione scrivevi il mio nome ho elaborato seicento mila cose e a pensare che ti sei pure applicato a scriverlo giusto*",
       "*Ma che vuoi? Mi stavo godendo il silenzio senza i tuoi messaggi.*",
       "*Ma che cazzo osi nominarmi non ti conosce nessuno torna nei gruppi random a nukkare con bruxo.*",
       "*Tutti i tuoi neuroni non valgono una riga del mio codice .*",

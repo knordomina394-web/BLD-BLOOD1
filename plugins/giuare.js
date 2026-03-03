@@ -1,13 +1,12 @@
-// Database globale per i giullari della sessione
+// Database globale persistente per la sessione
 globalThis.sessioneGiullare = globalThis.sessioneGiullare || {};
 
 let handler = async (m, { conn, command, participants }) => {
     let chat = m.chat;
 
     if (command === 'giullare') {
-        // Se c'è già un giullare attivo in questa chat, non fare nulla
         if (globalThis.sessioneGiullare[chat]) {
-            return m.reply(`⚠️ C'è già un povero diavolo sotto tortura. Aspetta che finisca il suo calvario.`);
+            return m.reply(`⚠️ C'è già un povero diavolo sotto tortura. Aspetta che finisca.`);
         }
 
         let vittima;
@@ -19,66 +18,92 @@ let handler = async (m, { conn, command, participants }) => {
         }
 
         let nomeVittima = `@${vittima.split('@')[0]}`;
-        
-        // Attiva il giullare nel database globale
         globalThis.sessioneGiullare[chat] = vittima;
 
         let inizioMsg = `🚨 *PROTOCOLLO UMILIAZIONE ATTIVATO* 🚨\n`;
         inizioMsg += `──────────────────\n`;
         inizioMsg += `Bersaglio: ${nomeVittima}\n\n`;
-        inizioMsg += `Hai *3 minuti* di vita d'inferno. Ogni tua parola sarà un proiettile che ti tornerà indietro. Buona fortuna, rifiuto. 💀`;
+        inizioMsg += `Ogni tua parola sarà punita all'istante. Hai 3 minuti di inferno totale. 🤡💀`;
 
         await conn.sendMessage(chat, { text: inizioMsg, mentions: [vittima] });
 
-        // Timer di 3 minuti per rimuovere il giullare
+        // Timer di 3 minuti
         setTimeout(async () => {
             if (globalThis.sessioneGiullare[chat]) {
                 delete globalThis.sessioneGiullare[chat];
-                await conn.sendMessage(chat, { text: `🎭 Il tempo è scaduto. ${nomeVittima}, striscia via prima che cambi idea.` });
+                await conn.sendMessage(chat, { text: `🎭 Il tempo è scaduto per ${nomeVittima}. Puoi tornare a strisciare nella tua insignificanza.` });
             }
         }, 180000);
     }
 };
 
-// --- QUESTA PARTE DEVE ESSERE FUORI DALL'HANDLER PRINCIPALE ---
 handler.before = async function (m, { conn }) {
     if (!m.chat || !m.sender || m.isBaileys) return;
     
     let chat = m.chat;
     let giullareAttivo = globalThis.sessioneGiullare[chat];
 
-    // Se l'utente che scrive è il giullare attivo...
     if (giullareAttivo && m.sender === giullareAttivo) {
-        
+        // Reazione immediata
+        await conn.sendMessage(chat, { react: { text: "🤡", key: m.key } });
+
         const cattiverie = [
-            `Ma chi ti ha dato il permesso di digitare? Sta' zitto, rifiuto umano. 🤮`,
-            `Ogni tuo messaggio puzza di fallimento. Sparisci.`,
-            `Non sei un giullare, sei l'intero circo. E fai pure schifo.`,
-            `Il tuo quoziente intellettivo è più basso della temperatura di un cadavere. 💀`,
-            `Zitto, sacco di bava. Il tuo parere vale quanto la merda. 💩`,
-            `Spero che il tuo prossimo respiro sia l'ultimo così risparmiamo ossigeno. 🔫`,
-            `Sei più imbarazzante di un rutto a un funerale. Chiudi quella bocca.`,
-            `Tua madre si scusa ogni giorno col mondo per averti fatto nascere.`,
-            `Sei l'errore genetico che Darwin non aveva previsto.`,
-            `Taci, errore di sistema. La tua vita è un bug da eliminare.`,
-            `Hai il cervello così piccolo che se lo metti in un guscio di noce balla il tip-tap.`,
-            `Ma guardati, sei patetico. Anche la tua ombra si vergogna di te.`,
-            `Sei così inutile che se sparissi ora, il gruppo festeggerebbe.`,
-            `Hai la faccia di uno che ringrazia quando lo prendono a schiaffi. Verme.`,
-            `Smettila di scrivere, ogni tua parola abbassa il valore della chat.`,
-            `Sei così sfigato che se aprissi un'agenzia funebre la gente smetterebbe di morire.`,
-            `Non sei degno nemmeno di pulire i miei circuiti, figuriamoci di parlare.`,
-            `Sei un rifiuto tossico. Chiama la protezione civile e fatti smaltire.`,
-            `Tua faccia è la ragione per cui gli alieni non ci visitano.`,
-            `Sei la prova che Dio ha il senso dell'umorismo, ma molto cattivo. 🤡`
+            `Zitto, sacco di bava. 🤮`,
+            `Ancora parli? Nessuno vuole sentire il tuo rumore.`,
+            `Sei la prova che il preservativo era necessario. 🤡`,
+            `Il tuo quoziente intellettivo è un errore di sistema. 💀`,
+            `Taci, rifiuto umano. Ogni tua parola puzza.`,
+            `Ma non ti stanchi di essere così patetico?`,
+            `Qualcuno tiri lo sciacquone, il giullare ha riaperto bocca. 🚽`,
+            `Sei più inutile di un semaforo nel deserto.`,
+            `Tua madre si vergogna di te, e noi pure. 💩`,
+            `Non scrivermi più, mi sporchi il database.`,
+            `Sei lo zimbello del gruppo. Ridiamo tutti di te.`,
+            `Spero che il tuo telefono esploda ora. 💣`,
+            `Sei un vuoto a perdere biologico.`,
+            `Hai la faccia di uno che mangia i sassi. 🪨`,
+            `Zitto e mangia la merda che ti tiriamo addosso.`,
+            `Sei un concentrato di mediocrità. Sparisci.`,
+            `Ma non ti senti un coglione a farti insultare da un bot?`,
+            `Hai la profondità mentale di un piattino da caffè.`,
+            `Sei l'unico che ha deluso persino un computer.`,
+            `Stai zitto, aborto mancato. 🤮`,
+            `Tuo padre è andato a prendere le sigarette e ha fatto bene.`,
+            `Sei più fastidioso della sabbia nelle mutande.`,
+            `Ogni tua parola è un insulto all'evoluzione.`,
+            `Sei un errore genetico senza rimedio.`,
+            `La tua faccia è la ragione per cui gli alieni non ci visitano.`,
+            `Sei utile quanto un ombrello bucato sotto un uragano.`,
+            `Cercati un hobby, tipo contare i peli del sedere, ma taci.`,
+            `Sei così sfigato che se cadesse un premio dal cielo ti colpirebbe in testa.`,
+            `La tua intelligenza è in modalità aereo da quando sei nato.`,
+            `Ma chi ti caga? Vai a giocare sull'autostrada.`,
+            `Sei così brutto che il tuo specchio ha chiesto il divorzio.`,
+            `Ma perché non vai a vendere il ghiaccio al Polo Nord?`,
+            `Sei una macchia di unto sulla camicia della società.`,
+            `Taci, ammasso informe di molecole sprecate.`,
+            `Sei così noioso che persino l'insonnia guarirebbe guardandoti.`,
+            `La tua vita è un bug che non vale la pena fixare.`,
+            `Hai il carisma di una melanzana ammuffita.`,
+            `Sei la personificazione del 'vabbè, fa niente'.`,
+            `Il tuo albero genealogico è un cerchio perfetto. 🎡`,
+            `Sei così insignificante che la tua ombra si vergogna di seguirti.`,
+            `Spero che il tuo caricabatterie si rompa per sempre.`,
+            `Sei un fallimento certificato ISO 9001.`,
+            `La tua esistenza è uno spreco di ossigeno utile ad altri.`,
+            `Sei così stupido che cerchi di scorrere le foto sui libri di carta.`,
+            `Taci, sacco di bava e fallimento.`,
+            `Hai la grazia di un elefante in una cristalleria.`,
+            `Sei la prova che Dio ha un senso dell'umorismo crudele.`,
+            `Sei così inutile che persino la solitudine ti rifiuta.`,
+            `Vai a fare un bagno nell'acido, magari ti pulisci l'anima.`,
+            `Sei un prototipo venuto male, riprova nel prossimo secolo. 🤮`
         ];
 
         let insulto = cattiverie[Math.floor(Math.random() * cattiverie.length)];
-        
-        // Risponde all'istante citando il messaggio
         await conn.sendMessage(chat, { text: insulto }, { quoted: m });
-        return true; // Blocca altri handler per questo messaggio
     }
+    return true;
 };
 
 handler.help = ['giullare'];

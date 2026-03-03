@@ -1,24 +1,34 @@
-//plug-in by blood 
-let giullareSession = {}
+//plug-in by blood
 
-let handler = async (m, { conn, command, participants }) => {
+let giullareSession = {}
+let handler = async (m, { conn, command, text }) => {
     let chat = m.chat
+    
     if (command === 'giullare') {
-        if (giullareSession[chat]) return m.reply('⚠️ C\'è già un giullare attivo.')
+        if (giullareSession[chat]) return m.reply('⚠️ C\'è già un giullare attivo in questa chat. Aspetta che finisca.')
         
-        let victim = (m.mentionedJid && m.mentionedJid[0]) ? m.mentionedJid[0] : (participants.map(u => u.id).filter(v => v !== conn.user.jid))[Math.floor(Math.random() * participants.length)]
+        // Determina la vittima: o il tag, o la persona a cui si risponde
+        let victim = m.mentionedJid && m.mentionedJid[0] ? m.mentionedJid[0] : m.quoted ? m.quoted.sender : null
+
+        if (!victim) return m.reply('⚠️ Devi taggare qualcuno o rispondere a un suo messaggio per farlo diventare un giullare!')
         
+        // Impedisce di auto-insultarsi (opzionale, rimuovi se vuoi che la gente possa auto-umiliarsi)
+        if (victim === conn.user.jid) return m.reply('Pensavi davvero che mi sarei insultato da solo? Prova con un umano, fallito.')
+
         giullareSession[chat] = victim
         let name = `@${victim.split('@')[0]}`
         
         await conn.sendMessage(chat, { 
-            text: `🚨 *GIULLARE ATTIVATO* 🚨\n\nBersaglio: ${name}\n\nHai 3 minuti di inferno. 🤡`, 
+            text: `🚨 *GIULLARE SCELTO* 🚨\n\nBersaglio: ${name}\n\nL'utente che ha lanciato il comando ti ha condannato a 3 minuti di umiliazione pubblica. Ogni tua parola sarà punita. 🤡💀`, 
             mentions: [victim] 
         }, { quoted: m })
 
+        // Timer 3 minuti
         setTimeout(() => {
-            delete giullareSession[chat]
-            conn.sendMessage(chat, { text: `🎭 Tempo scaduto per ${name}.` })
+            if (giullareSession[chat]) {
+                delete giullareSession[chat]
+                conn.sendMessage(chat, { text: `🎭 Il supplizio per ${name} è terminato. Torna pure nel tuo buco.` })
+            }
         }, 180000)
     }
 }
@@ -27,6 +37,7 @@ handler.before = async function (m, { conn }) {
     if (!m.chat || !m.sender || m.isBaileys) return
     if (!giullareSession[m.chat] || giullareSession[m.chat] !== m.sender) return
 
+    // Reazione immediata 🤡
     await conn.sendMessage(m.chat, { react: { text: "🤡", key: m.key } })
 
     const i = [

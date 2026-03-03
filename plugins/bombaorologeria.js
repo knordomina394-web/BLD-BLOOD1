@@ -2,62 +2,64 @@
 
 let bombaInCorso = {};
 
-let handler = async (m, { conn, text, usedPrefix, command }) => {
+let handler = async (m, { conn, text, command }) => {
     let chat = m.chat;
 
-    // --- LOGICA DI PASSAGGIO (Se la bomba è attiva) ---
+    // --- LOGICA DI PASSAGGIO ---
     if (bombaInCorso[chat]) {
         let b = bombaInCorso[chat];
         
-        // Solo la vittima attuale può interagire
+        // Solo la vittima attuale può passare la bomba
         if (m.sender !== b.vittima) return; 
 
-        // CONTROLLO RIGOROSO: deve iniziare con ". passa a" o ".passa a"
-        let msg = m.text.toLowerCase().trim();
-        if (!msg.startsWith('.') || !msg.includes('passa a')) return;
+        // Controlla se il messaggio contiene "passa a" (ovunque sia posizionato)
+        let contenuto = m.text.toLowerCase();
+        if (!contenuto.includes('passa a')) return;
 
         let target = null;
         if (m.mentionedJid && m.mentionedJid[0]) target = m.mentionedJid[0];
         else if (m.quoted && m.quoted.sender) target = m.quoted.sender;
 
         if (!target) return; 
-        if (target === m.sender) return m.reply('Non puoi ridarti la bomba da solo, passala a qualcun altro! 🏃‍♂️');
-        if (target === conn.user.jid) return m.reply('Bello tentativo, ma io sono un bot, le bombe non mi fanno nulla! 😎');
-
+        if (target === m.sender) return; // Non può passarsela da solo
+        
         // Passaggio della bomba
         clearTimeout(b.timer);
+        
+        let tempoRimanente = Math.floor((b.scadenza - Date.now()));
+        if (tempoRimanente <= 500) return; // Se mancano meno di 0.5s è già esplosa
+
         b.vittima = target;
         let pName = `@${target.split('@')[0]}`;
         
-        let tempoRimanente = Math.floor((b.scadenza - Date.now()) / 1000);
-        if (tempoRimanente <= 0) return; // Se esplode mentre scriveva
-
         let conferma = `💣 *BOMBA PASSATA!* 💣\n\n`;
         conferma += `L'ordigno è ora nelle mani di ${pName}!\n`;
-        conferma += `🧨 Sbrigati! Scrivi: *. passa a @user*`;
+        conferma += `🧨 Sbrigati! Scrivi: *passa a @user*`;
         
-        // Ripristina il timer con il tempo residuo
-        b.timer = setTimeout(() => esplosione(chat, conn), tempoRimanente * 1000);
+        // Imposta il nuovo timer con il tempo residuo
+        b.timer = setTimeout(() => esplosione(chat, conn), tempoRimanente);
 
         return conn.sendMessage(chat, { text: conferma, mentions: [target] }, { quoted: m });
     }
 
     // --- ATTIVAZIONE NUOVA BOMBA (.bomba) ---
     if (command === 'bomba') {
-        let casuale = Math.floor(Math.random() * (40 - 15 + 1)) + 15; // Timer tra 15 e 40 secondi
-        let scadenza = Date.now() + (casuale * 1000);
+        if (bombaInCorso[chat]) return m.reply('C\'è già una bomba in giro! Scappa! 🏃‍♂️');
+
+        let durata = Math.floor(Math.random() * (35 - 15 + 1)) + 15; 
+        let scadenza = Date.now() + (durata * 1000);
         
         bombaInCorso[chat] = {
             vittima: m.sender,
             scadenza: scadenza,
-            timer: setTimeout(() => esplosione(chat, conn), casuale * 1000)
+            timer: setTimeout(() => esplosione(chat, conn), durata * 1000)
         };
 
         let pName = `@${m.sender.split('@')[0]}`;
         let msg = `⚠️ *ALLERTA BOMBA!* ⚠️\n\n`;
         msg += `Una bomba ticchetta tra le mani di ${pName}!\n\n`;
         msg += `🔥 Hai pochissimi secondi per liberartene!\n`;
-        msg += `👉 DEVI SCRIVERE: *. passa a @utente*`;
+        msg += `👉 Scrivi: *passa a @utente*`;
 
         return conn.sendMessage(chat, { text: msg, mentions: [m.sender] }, { quoted: m });
     }
@@ -70,14 +72,12 @@ async function esplosione(chatId, conn) {
 
     let vTag = `@${b.vittima.split('@')[0]}`;
     let finale = `💥 *BOOOOOOOOM!!!* 💥\n\n`;
-    finale += `La bomba è esplosa fragorosamente nelle mani di ${vTag}!\n`;
-    finale += `💀 Non è rimasto nulla, solo un po' di fumo e silenzio...`;
+    finale += `La bomba è esplosa nelle mani di ${vTag}!\n`;
+    finale += `💀 È rimasto solo un cratere...`;
 
-    // Opzionale: detrazione soldi
     if (globalThis.eco && globalThis.eco[b.vittima]) {
-        let danno = 200;
-        globalThis.eco[b.vittima] -= danno;
-        finale += `\n💸 Hai perso *${danno} Soldi Sporchi* per le spese funebri.`;
+        globalThis.eco[b.vittima] -= 200;
+        finale += `\n💸 Hai perso *200 Soldi Sporchi* di cure mediche.`;
     }
 
     await conn.sendMessage(chatId, { text: finale, mentions: [b.vittima] });
@@ -88,5 +88,7 @@ handler.help = ['bomba'];
 handler.tags = ['giochi'];
 handler.command = /^(bomba)$/i;
 handler.group = true;
+// Rimuoviamo restrizioni che potrebbero bloccare l'ascolto
+handler.all = true; 
 
 export default handler;

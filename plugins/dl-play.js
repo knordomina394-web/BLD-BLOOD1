@@ -2,67 +2,64 @@ import axios from 'axios'
 import ytSearch from 'yt-search'
 
 let handler = async (m, { conn, command, text, usedPrefix }) => {
-    if (!text) return m.reply(`*Uso:* ${usedPrefix + command} <canzone/video>`)
+    if (!text) return m.reply(`*╭─ׄ✦☾⋆⁺₊✧ Bloodbot ✧₊⁺⋆☽✦─ׅ⭒*\n*├* ⁉️ _Uso:_ \`${usedPrefix + command} <nome/url>\`\n*╰⭒─ׄ─ׅ─ׄ─⭒─ׄ─ׅ─ׄ─*`)
 
     try {
         // 1. RICERCA
         const search = await ytSearch(text)
         const video = search.videos[0]
-        if (!video) return m.reply('❌ Nessun risultato trovato su YouTube.')
+        if (!video) return m.reply('❌ Nessun risultato trovato.')
 
-        // 2. MENU PRINCIPALE (.play)
+        // 2. MENU CON I BOTTONI CHE FUNZIONAVANO (.play)
         if (command === 'play') {
-            const sections = [{
-                title: "Seleziona Formato",
-                rows: [
-                    { title: "🎵 Audio MP3", rowId: `${usedPrefix}playaudio ${video.url}`, description: "Scarica la traccia audio" },
-                    { title: "🎥 Video MP4", rowId: `${usedPrefix}playvideo ${video.url}`, description: "Scarica il video HD" }
-                ]
-            }]
+            const buttons = [
+                {
+                    buttonId: `${usedPrefix}playaudio ${video.url}`,
+                    buttonText: { displayText: '🎵 AUDIO (MP3)' },
+                    type: 1
+                },
+                {
+                    buttonId: `${usedPrefix}playvideo ${video.url}`,
+                    buttonText: { displayText: '🎥 VIDEO (MP4)' },
+                    type: 1
+                }
+            ]
 
-            const listMessage = {
+            const buttonMessage = {
                 image: { url: video.thumbnail },
                 caption: `*╭─ׄ✦☾⋆⁺₊✧ Bloodbot ✧₊⁺⋆☽✦─ׅ⭒*\n*├* 📝 *Titolo:* ${video.title}\n*├* ⏱️ *Durata:* ${video.timestamp}\n*├* 👤 *Canale:* ${video.author.name}\n*╰⭒─ׄ─ׅ─ׄ─⭒─ׄ─ׅ─ׄ─*`,
-                footer: "Scegli un'opzione qui sotto",
-                title: "📥 Download Center",
-                buttonText: "SELEZIONA QUI",
-                sections
+                footer: 'Scegli il formato qui sotto',
+                buttons: buttons,
+                headerType: 4
             }
-            return await conn.sendMessage(m.chat, listMessage, { quoted: m })
+
+            return await conn.sendMessage(m.chat, buttonMessage, { quoted: m })
         }
 
-        // 3. LOGICA DI DOWNLOAD CON MULTI-API (Bypass totale)
-        await m.reply('⏳ _Elaborazione in corso... sto aggirando i blocchi di YouTube._')
-        
+        // 3. ESECUZIONE DOWNLOAD (.playaudio o .playvideo)
+        await m.reply('⏳ _Download in corso... sto aggirando i blocchi di YouTube._')
+
         const isVideo = command === 'playvideo'
         let downloadUrl = null
-        let errorLog = ''
 
-        // --- TENTATIVO API 1 (Vreden) ---
+        // TENTATIVO CON API DI BYPASS (Per evitare il blocco IP del server)
         try {
+            // Proviamo la prima API (Vreden)
             const res = await axios.get(`https://api.vreden.my.id/api/yt${isVideo ? 'mp4' : 'mp3'}?url=${video.url}`)
-            downloadUrl = isVideo ? res.data.result.download : res.data.result.download
-        } catch (e) { errorLog += 'API 1: Fallita. ' }
-
-        // --- TENTATIVO API 2 (Alya - Fallback) ---
-        if (!downloadUrl) {
+            downloadUrl = res.data.result.download
+        } catch (e) {
+            // Fallback su seconda API (Lolhuman)
             try {
-                const res2 = await axios.get(`https://api.alyachan.pro/api/yt${isVideo ? 'v' : 'a'}?url=${video.url}&apikey=GataDios`)
-                downloadUrl = res2.data.data.url
-            } catch (e) { errorLog += 'API 2: Fallita. ' }
+                const res2 = await axios.get(`https://api.lolhuman.xyz/api/yt${isVideo ? 'video' : 'audio'}?apikey=GataDios&url=${video.url}`)
+                downloadUrl = isVideo ? res2.data.result.video : res2.data.result.audio
+            } catch (e2) {
+                throw new Error("Tutte le API di download sono al momento occupate. Riprova tra poco.")
+            }
         }
 
-        // --- TENTATIVO API 3 (Lolhuman - Emergenza) ---
-        if (!downloadUrl) {
-            try {
-                const res3 = await axios.get(`https://api.lolhuman.xyz/api/yt${isVideo ? 'video' : 'audio'}?apikey=GataDios&url=${video.url}`)
-                downloadUrl = isVideo ? res3.data.result.video : res3.data.result.audio
-            } catch (e) { errorLog += 'API 3: Fallita.' }
-        }
+        if (!downloadUrl) throw new Error("Impossibile ottenere il link di download.")
 
-        if (!downloadUrl) throw new Error("Tutte le API di bypass sono al limite. Riprova tra 10 minuti.")
-
-        // 4. INVIO FINALE
+        // 4. INVIO FILE FINALE
         if (isVideo) {
             await conn.sendMessage(m.chat, { 
                 video: { url: downloadUrl }, 
@@ -78,24 +75,24 @@ let handler = async (m, { conn, command, text, usedPrefix }) => {
                 contextInfo: {
                     externalAdReply: {
                         title: video.title,
-                        body: 'Bloodbot Music',
+                        body: 'Audio Download - Bloodbot',
                         thumbnailUrl: video.thumbnail,
                         sourceUrl: video.url,
                         mediaType: 1,
-                        showAdAttribution: true,
-                        renderLargerThumbnail: true
+                        showAdAttribution: true
                     }
                 }
             }, { quoted: m })
         }
 
     } catch (e) {
-        console.error(e)
-        m.reply(`❌ *ERRORE DI SISTEMA*\n\nI server di download sono sovraccarichi o YouTube ha bloccato anche i bridge.\n\n_Dettaglio:_ ${e.message}`)
+        console.error('ERRORE:', e)
+        m.reply(`❌ *ERRORE DI SISTEMA*\n\nYouTube sta bloccando le richieste dal server.\n\n_Dettaglio:_ ${e.message}`)
     }
 }
 
 handler.command = ['play', 'playaudio', 'playvideo']
-handler.help = ['play']
+handler.help = ['play <titolo>', 'playaudio <url>', 'playvideo <url>']
 handler.tags = ['download']
+
 export default handler

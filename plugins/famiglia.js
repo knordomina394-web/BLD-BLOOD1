@@ -27,7 +27,7 @@ let handler = async (m, { conn, text, command }) => {
         menu += `*👉 .albero @tag* - *GUARDA L'ALBERO DI UN ALTRO*\n`
         menu += `*👉 .sciogli* - *TERMINA L'UNIONE ATTUALE*\n`
         menu += `*👉 .disereda @tag* - *RIMUOVI UN FIGLIO*\n\n`
-        menu += `*⚠️ NOTA: IL COMANDO .UNIONE USA ORA I BOTTONI PER ACCETTARE O RIFIUTARE!*`
+        menu += `* PREPARATEVI A RIPRODURVI COME CONIGLI*`
         return m.reply(menu)
     }
 

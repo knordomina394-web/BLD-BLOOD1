@@ -7,13 +7,21 @@ let handler = async (m, { conn, text, command }) => {
     let user = m.sender
     let users = global.db.data.users
 
-    // Inizializzazione sicura per l'utente corrente
-    if (!users[user]) users[user] = { p: [], c: null, s: null }
+    // --- FUNZIONE DI SICUREZZA: Inizializza l'utente se non esiste o è corrotto ---
+    const checkUser = (id) => {
+        if (!users[id]) users[id] = {}
+        if (!Array.isArray(users[id].p)) users[id].p = []
+        if (users[id].c === undefined) users[id].c = null
+        if (users[id].s === undefined) users[id].s = null
+    }
+
+    checkUser(user) // Inizializza chi scrive il comando
 
     // --- LOGICA UNIONE ---
     if (command === 'unione') {
         let target = m.mentionedJid[0] || (m.quoted ? m.quoted.sender : null)
         if (!target) return m.reply('*Menziona la persona con cui vuoi unirti!*')
+        checkUser(target)
         if (users[user].c) return m.reply('*Sei già unito a qualcuno! Sciogli il legame attuale.*')
         if (target === user) return m.reply('*Non puoi unirti a te stesso.*')
         
@@ -31,57 +39,57 @@ let handler = async (m, { conn, text, command }) => {
     if (command === 'accettaunione') {
         let partner = Object.keys(users).find(k => users[k].proposta === user)
         if (!partner) return
+        checkUser(partner)
         users[user].c = partner; users[partner].c = user
         delete users[partner].proposta
         return conn.reply(chat, `*✨ UNIONE FORMALIZZATA!*`, m)
     }
 
-    // --- LOGICA ALBERO ESTESO (FIXED) ---
+    // --- LOGICA ADOTTA (FIXED) ---
+    if (command === 'adotta') {
+        let target = m.mentionedJid[0] || (m.quoted ? m.quoted.sender : null)
+        if (!target) return m.reply('*Chi vuoi adottare?*')
+        checkUser(target)
+        
+        if (users[target].s) return m.reply('*Ha già un genitore registrato.*')
+        if (target === user) return m.reply('*Non puoi adottare te stesso.*')
+
+        // Assicurati che l'array figli esista prima del push
+        if (!Array.isArray(users[user].p)) users[user].p = []
+        
+        users[user].p.push(target)
+        users[target].s = user
+        return m.reply(`*👶 Hai adottato @${target.split('@')[0]}!*`, null, { mentions: [target] })
+    }
+
+    // --- LOGICA ALBERO ESTESO ---
     if (command === 'famigliamia' || command === 'albero' || command === 'famiglia') {
         if (command === 'famiglia' && !text && !m.mentionedJid[0]) {
             return m.reply('*📜 COMANDI FAMIGLIA:*\n.unione @user\n.adotta @user\n.famigliamia\n.albero @user\n.sciogli\n.disereda')
         }
 
         let target = (command === 'albero' || command === 'famiglia') ? (m.mentionedJid[0] || (m.quoted ? m.quoted.sender : user)) : user
-        
-        // Se l'utente target non esiste, lo inizializziamo al volo per evitare l'errore
-        if (!users[target]) users[target] = { p: [], c: null, s: null }
+        checkUser(target)
         let u = users[target]
 
-        // 1. GENITORE
         let genitore = u.s 
-        
-        // 2. NONNI
         let nonno = (genitore && users[genitore]) ? users[genitore].s : null
-
-        // 3. FRATELLI
         let fratelli = (genitore && users[genitore]) ? (users[genitore].p || []).filter(id => id !== target) : []
-
-        // 4. ZII
         let zii = (nonno && users[nonno]) ? (users[nonno].p || []).filter(id => id !== genitore) : []
 
-        // 5. CUGINI (Con controllo forEach sicuro)
         let cugini = []
-        zii.forEach(zio => { 
-            if (users[zio] && users[zio].p) cugini.push(...users[zio].p) 
-        })
+        zii.forEach(zio => { if (users[zio]?.p) cugini.push(...users[zio].p) })
 
-        // 6. NIPOTI (Con controllo forEach sicuro)
         let nipotiFigli = []
         if (u.p) {
-            u.p.forEach(figlio => { 
-                if (users[figlio] && users[figlio].p) nipotiFigli.push(...users[figlio].p) 
-            })
+            u.p.forEach(figlio => { if (users[figlio]?.p) nipotiFigli.push(...users[figlio].p) })
         }
         
         let nipotiFratelli = []
-        fratelli.forEach(fratello => { 
-            if (users[fratello] && users[fratello].p) nipotiFratelli.push(...users[fratello].p) 
-        })
+        fratelli.forEach(fratello => { if (users[fratello]?.p) nipotiFratelli.push(...users[fratello].p) })
 
-        // Formattazione
         let fmt = (id) => id ? `@${id.split('@')[0]}` : 'Nessuno'
-        let listFmt = (arr) => arr.length > 0 ? arr.map(id => `@${id.split('@')[0]}`).join(', ') : 'Nessuno'
+        let listFmt = (arr) => arr.length > 0 ? [...new Set(arr)].map(id => `@${id.split('@')[0]}`).join(', ') : 'Nessuno'
 
         let tree = `*🌳 DINASTIA DI ${fmt(target)} 🌳*\n`
         tree += `──────────────────────\n`
@@ -99,18 +107,6 @@ let handler = async (m, { conn, text, command }) => {
 
         let mnts = [target, u.c, genitore, nonno, ...fratelli, ...zii, ...cugini, ...(u.p || []), ...nipotiFigli, ...nipotiFratelli].filter(Boolean)
         return conn.sendMessage(chat, { text: tree, mentions: mnts }, { quoted: m })
-    }
-
-    // --- ALTRI COMANDI ---
-    if (command === 'adotta') {
-        let target = m.mentionedJid[0] || (m.quoted ? m.quoted.sender : null)
-        if (!target) return m.reply('*Chi vuoi adottare?*')
-        if (users[target]?.s) return m.reply('*Ha già un genitore.*')
-        
-        if (!users[target]) users[target] = { p: [], c: null, s: null }
-        users[user].p.push(target)
-        users[target].s = user
-        return m.reply(`*👶 Hai adottato ${target.split('@')[0]}!*`)
     }
 
     if (command === 'sciogli') {

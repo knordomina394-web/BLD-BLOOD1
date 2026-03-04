@@ -8,6 +8,7 @@ let handler = async (m, { conn, text, command }) => {
     let users = global.db.data.users
 
     const checkUser = (id) => {
+        if (!id) return
         if (!users[id]) users[id] = {}
         if (!Array.isArray(users[id].p)) users[id].p = []
         if (users[id].c === undefined) users[id].c = null
@@ -16,90 +17,107 @@ let handler = async (m, { conn, text, command }) => {
 
     checkUser(user)
 
+    // --- COMANDO UNIONE (CON VINCOLI) ---
     if (command === 'unione') {
         let target = m.mentionedJid[0] || (m.quoted ? m.quoted.sender : null)
-        if (!target) return m.reply('*Menziona qualcuno per l\'unione!*')
+        if (!target || target === user) return m.reply('*⚠️ ERRORE: TAGGA UN PARTNER VALIDO!*')
         checkUser(target)
-        if (users[user].c) return m.reply('*Sei già unito!*')
+
+        // Vincoli di realtà
+        if (users[user].s === target || users[target].s === user) return m.reply('*⚠️ AZIONE BLOCCATA: NON PUOI UNIRTI A UN GENITORE O A UN FIGLIO!*')
+        if (users[user].c) return m.reply('*⚠️ ERRORE: SEI GIÀ UNITO A QUALCUNO!*')
+        
         users[user].proposta = target
-        return conn.sendMessage(chat, { text: `*💍 @${user.split('@')[0]} chiede l'unione a @${target.split('@')[0]}*\n\nAccetti? Usa i bottoni o scrivi .accettaunione`, mentions: [user, target] })
+        return conn.sendMessage(chat, { 
+            text: `*💍 RICHIESTA DI UNIONE*\n\n*@${user.split('@')[0]}* *VUOLE UNIRSI A* *@${target.split('@')[0]}*.\n\n*USA I BOTTONI O SCRIVI .ACCETTAUNIONE PER CONFERMARE!*`, 
+            mentions: [user, target] 
+        })
     }
 
+    // --- COMANDO ADOTTA (CON VINCOLI DI REALTÀ) ---
     if (command === 'adotta') {
         let target = m.mentionedJid[0] || (m.quoted ? m.quoted.sender : null)
-        if (!target) return m.reply('*Chi vuoi adottare?*')
+        if (!target) return m.reply('*⚠️ ERRORE: CHI VUOI ADOTTARE?*')
         checkUser(target)
-        if (users[target].s) return m.reply('*Ha già un genitore!*')
+
+        if (target === user) return m.reply('*⚠️ ERRORE: NON PUOI ADOTTARE TE STESSO!*')
+        if (users[user].c === target) return m.reply('*⚠️ ERRORE: NON PUOI ADOTTARE TUO MARITO/TUA MOGLIE!*')
+        if (users[user].s === target) return m.reply('*⚠️ ERRORE: NON PUOI ADOTTARE TUO PADRE/TUA MADRE!*')
+        if (users[target].s) return m.reply('*⚠️ ERRORE: QUESTO UTENTE HA GIÀ UN GENITORE!*')
+
         users[user].p.push(target)
         users[target].s = user
-        return m.reply(`*👶 Adottato con successo!*`)
+        return m.reply(`*👶 ADOZIONE COMPLETATA: *@${target.split('@')[0]}* *È ORA TUO FIGLIO!*`, null, { mentions: [target] })
     }
 
+    // --- VISUALIZZAZIONE ALBERO (TUTTO IN GRASSETTO) ---
     if (command === 'albero' || command === 'famigliamia' || command === 'famiglia') {
         let target = (command === 'famigliamia') ? user : (m.mentionedJid[0] || (m.quoted ? m.quoted.sender : user))
         checkUser(target)
         
         let u = users[target]
-        let gen = u.s
-        let nonno = (gen && users[gen]) ? users[gen].s : null
-        let partner = u.c
+        let fmt = (id) => id ? `*@${id.split('@')[0]}*` : '*???*'
 
-        let fmt = (id) => id ? `@${id.split('@')[0]}` : '???'
-        
-        // COSTRUZIONE GRAFICA DELL'ALBERO
+        // Calcolo parenti
+        let partner = u.c
+        let padre = u.s
+        let madre = padre ? users[padre]?.c : null
+        let nonno = padre ? users[padre]?.s : null
+        let nonna = nonno ? users[nonno]?.c : null
+        let fratelli = padre ? users[padre].p.filter(id => id !== target) : []
+
         let tree = `*🌳 ALBERO GENEALOGICO DI ${fmt(target).toUpperCase()} 🌳*\n\n`
+
+        // Grafica Antenati
+        tree += `       [👵 ${fmt(nonna)}] *♾️* [👴 ${fmt(nonno)}]\n`
+        tree += `               ┃\n`
+        tree += `       [👩 ${fmt(madre)}] *♾️* [👨 ${fmt(padre)}]\n`
+        tree += `               ┃\n`
         
-        // Generazione Nonni
-        tree += `      [👴 ${fmt(nonno)}]\n`
-        tree += `             ┃\n`
-        
-        // Generazione Genitori
-        tree += `      [👨 ${fmt(gen)}]\n`
-        tree += `             ┃\n`
-        
-        // Utente e Partner
-        if (partner) {
-            tree += `  [👤 ${fmt(target)}] ═══ [💍 ${fmt(partner)}]\n`
-        } else {
-            tree += `      [👤 ${fmt(target)}]\n`
+        // Fratelli
+        if (fratelli.length > 0) {
+            tree += `  ${fratelli.map(f => `[👫 ${fmt(f)}]`).join(' *━* ')} *━ ┓*\n`
+            tree += `                       ┃\n`
         }
-        
-        // Generazione Figli
+
+        // Centro (Tu e Partner)
+        if (partner) {
+            tree += `      [👤 ${fmt(target)}] *💍* [💍 ${fmt(partner)}]\n`
+        } else {
+            tree += `               [👤 ${fmt(target)}]\n`
+        }
+
+        // Discendenti
         if (u.p && u.p.length > 0) {
-            tree += `             ┣━━━━━━━━┓\n`
+            tree += `               *┣━━━━━━━━━━━━━━┓*\n`
             u.p.forEach((figlio, i) => {
-                let rano = (i === u.p.length - 1) ? '┗' : '┣'
-                tree += `             ${rano}━ [👶 ${fmt(figlio)}]\n`
+                let rano = (i === u.p.length - 1) ? '*┗*' : '*┣*'
+                tree += `               ${rano}*━━* [👶 ${fmt(figlio)}]\n`
                 
-                // Generazione Nipoti (Figli dei figli)
-                if (users[figlio] && users[figlio].p && users[figlio].p.length > 0) {
-                    users[figlio].p.forEach((nipote, ni) => {
-                        let subRano = (ni === users[figlio].p.length - 1) ? ' ' : '┃'
-                        let subRano2 = (ni === users[figlio].p.length - 1) ? '┗' : '┣'
-                        tree += `             ${subRano}      ${subRano2}━ [🍼 ${fmt(nipote)}]\n`
-                    })
-                }
+                let nipoti = users[figlio]?.p || []
+                nipoti.forEach((nipote, ni) => {
+                    let subRano = (ni === nipoti.length - 1) ? '*┗*' : '*┣*'
+                    let spazio = (i === u.p.length - 1) ? ' ' : '┃'
+                    tree += `               ${spazio}       ${subRano}*━━* [🍼 ${fmt(nipote)}]\n`
+                })
             })
         } else {
-            tree += `             ┃\n`
-            tree += `      (Nessun figlio)\n`
+            tree += `               ┃\n`
+            tree += `        *[🍃 NESSUN EREDE]*\n`
         }
 
-        tree += `\n──────────────────────\n`
-        tree += `_Usa .famiglia per la guida comandi_`
+        tree += `\n*──────────────────────────*\n`
+        tree += `*_SISTEMA DI GENEALOGIA REALE_*`
 
-        let mnts = [target, partner, gen, nonno, ...(u.p || [])].filter(Boolean)
-        // Aggiungiamo anche i nipoti alle menzioni per evitare @id grezzi
-        u.p.forEach(f => { if(users[f]?.p) mnts.push(...users[f].p) })
-
+        let mnts = [target, partner, padre, madre, nonno, nonna, ...fratelli, ...(u.p || [])].filter(Boolean)
         return conn.sendMessage(chat, { text: tree, mentions: [...new Set(mnts)] }, { quoted: m })
     }
 
     if (command === 'sciogli') {
         let ex = users[user].c
-        if (!ex) return m.reply('*Sei solo come un sasso.*')
+        if (!ex) return m.reply('*⚠️ NON SEI UNITO A NESSUNO!*')
         users[user].c = null; if (users[ex]) users[ex].c = null
-        return m.reply('*Unione sciolta!*')
+        return m.reply('*📄 UNIONE SCIOLTA CON SUCCESSO!*')
     }
 }
 

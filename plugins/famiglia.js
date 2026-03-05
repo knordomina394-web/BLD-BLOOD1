@@ -19,33 +19,40 @@ let handler = async (m, { conn, text, command, usedPrefix }) => {
 
     checkUser(user)
 
-    // --- MENU ---
+    // --- 1. MENU COMPLETO ---
     if (command === 'famiglia') {
-        let menu = `*🌳 SISTEMA GENEALOGICO 🌳*\n\n`
-        menu += `👉 *${usedPrefix}unione @tag*\n`
-        menu += `👉 *${usedPrefix}adotta @tag*\n`
-        menu += `👉 *${usedPrefix}disereda @tag*\n`
-        menu += `👉 *${usedPrefix}famigliamia* (Albero Grafico)\n`
+        let menu = `*🌳 SISTEMA GENEALOGICO REALE 🌳*\n\n`
+        menu += `*UNIONE:*\n`
+        menu += `👉 *${usedPrefix}unione @tag* (Chiedi)\n`
+        menu += `👉 *${usedPrefix}accettaunione* (Conferma)\n`
+        menu += `👉 *${usedPrefix}sciogli* (Divorzia)\n\n`
+        menu += `*FIGLI:*\n`
+        menu += `👉 *${usedPrefix}adotta @tag* (Aggiungi)\n`
+        menu += `👉 *${usedPrefix}disereda @tag* (Rimuovi)\n\n`
+        menu += `*VISUALIZZA:*\n`
+        menu += `👉 *${usedPrefix}famigliamia* (Il tuo albero)\n`
+        menu += `👉 *${usedPrefix}albero @tag* (Albero altrui)\n`
         return m.reply(menu)
     }
 
-    // --- DISEREDA ---
+    // --- 2. LOGICA DISEREDA ---
     if (command === 'disereda') {
         let target = m.mentionedJid[0] || (m.quoted ? m.quoted.sender : null)
-        if (!target) return m.reply('*⚠️ Tagga il figlio!*')
+        if (!target) return m.reply('*⚠️ Tagga il figlio da rimuovere!*')
+        checkUser(user)
         let index = users[user].p.indexOf(target)
-        if (index === -1) return m.reply('*❌ Non è tuo figlio.*')
+        if (index === -1) return m.reply('*❌ Questo utente non è tuo figlio.*')
         users[user].p.splice(index, 1)
         if (users[target]) users[target].s = null
-        return m.reply(`*🚫 @${target.split('@')[0]} rimosso.*`, null, { mentions: [target] })
+        return m.reply(`*🚫 Rimosso dalla famiglia.*`)
     }
 
-    // --- ALBERO GRAFICO ---
+    // --- 3. GENERAZIONE IMMAGINE (FIX CODICI E CARATTERI) ---
     if (command === 'famigliamia' || command === 'albero') {
         let target = (command === 'famigliamia') ? user : (m.mentionedJid[0] || (m.quoted ? m.quoted.sender : user))
         checkUser(target)
 
-        await m.reply('⏳ *Generazione immagine in corso...*')
+        await m.reply('⏳ *Generazione albero...*')
 
         const canvas = createCanvas(800, 750)
         const ctx = canvas.getContext('2d')
@@ -66,13 +73,14 @@ let handler = async (m, { conn, text, command, usedPrefix }) => {
             ctx.font = 'bold 18px Arial'
             ctx.fillText(label, x, y - 10)
             
-            // --- FIX NOMI SPECIALI ---
-            // Usiamo il nome di WhatsApp, se fallisce puliamo il numero
-            let name = conn.getName(id) || id.split('@')[0]
-            ctx.font = '14px Arial' 
-            // Accorciamo se troppo lungo per non uscire dal box
-            let displayName = name.length > 18 ? name.substring(0, 16) + '..' : name
-            ctx.fillText(displayName, x, y + 20)
+            // --- FIX DEFINITIVO NOMI ---
+            let rawName = conn.getName(id) || id.split('@')[0]
+            // Rimuove emoji e caratteri speciali che causano i codici esadecimali
+            let cleanName = rawName.replace(/[^\x20-\x7E]/g, '').trim() 
+            if (cleanName.length === 0) cleanName = id.split('@')[0] // Se resta vuoto, usa il numero
+            
+            ctx.font = '14px Arial'
+            ctx.fillText(cleanName.substring(0, 18), x, y + 20)
         }
 
         let u = users[target]
@@ -84,14 +92,12 @@ let handler = async (m, { conn, text, command, usedPrefix }) => {
         ctx.textAlign = 'center'
         ctx.fillText(`ALBERO GENEALOGICO`, canvas.width / 2, 50)
 
-        // Linee Genitore
         if (padre) {
             ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 2
             ctx.beginPath(); ctx.moveTo(400, 195); ctx.lineTo(400, 270); ctx.stroke()
             await drawBox(padre, 400, 150, 'GENITORE', '#3498db')
         }
 
-        // Tu e Partner
         if (partner) {
             ctx.strokeStyle = '#e74c3c'; ctx.beginPath()
             ctx.moveTo(310, 325); ctx.lineTo(490, 325); ctx.stroke()
@@ -101,7 +107,6 @@ let handler = async (m, { conn, text, command, usedPrefix }) => {
             await drawBox(target, 400, 325, 'TU', '#ffffff')
         }
 
-        // Figli
         if (u.p && u.p.length > 0) {
             ctx.strokeStyle = '#ffffff'; ctx.beginPath()
             ctx.moveTo(400, 370); ctx.lineTo(400, 460); ctx.stroke()
@@ -121,19 +126,19 @@ let handler = async (m, { conn, text, command, usedPrefix }) => {
     // --- ALTRI COMANDI ---
     if (command === 'adotta') {
         let target = m.mentionedJid[0] || (m.quoted ? m.quoted.sender : null)
-        if (!target || target === user) return m.reply('*⚠️ Tagga qualcuno!*')
+        if (!target || target === user) return m.reply('*⚠️ Tagga chi vuoi adottare!*')
         checkUser(target)
         if (users[target].s) return m.reply('*❌ Ha già un genitore!*')
         users[user].p.push(target)
         users[target].s = user
-        m.reply('*👶 Adottato!*')
+        m.reply('*👶 Adottato con successo!*')
     }
 
     if (command === 'unione') {
         let target = m.mentionedJid[0] || (m.quoted ? m.quoted.sender : null)
         if (!target || target === user) return m.reply('*⚠️ Tagga il partner!*')
         users[target].propostaUnione = user
-        m.reply('*💍 Proposta inviata!*')
+        m.reply('*💍 Proposta inviata! Aspetta la conferma.*')
     }
 
     if (command === 'accettaunione') {
@@ -142,7 +147,7 @@ let handler = async (m, { conn, text, command, usedPrefix }) => {
         users[user].c = proponente
         users[proponente].c = user
         delete users[user].propostaUnione
-        m.reply('*✨ Siete ora partner!*')
+        m.reply('*✨ Siete ora partner ufficiali!*')
     }
 
     if (command === 'sciogli') {
@@ -153,7 +158,7 @@ let handler = async (m, { conn, text, command, usedPrefix }) => {
     }
 }
 
-handler.help = ['albero', 'famiglia']
+handler.help = ['albero', 'famiglia', 'adotta', 'unione', 'disereda']
 handler.tags = ['giochi']
 handler.command = /^(unione|accettaunione|adotta|disereda|albero|famigliamia|sciogli|famiglia)$/i
 handler.group = true

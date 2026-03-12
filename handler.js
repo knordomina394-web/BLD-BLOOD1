@@ -417,6 +417,12 @@ if (m.message?.protocolMessage?.type === 'MESSAGE_EDIT') {
         let isOwner = isROwner || m.fromMe
         let isMods = isOwner || global.mods?.map(v => v.replace(/[^0-9]/g, '') + '@s.whatsapp.net').includes(normalizedSender) || false
         let isPrems = isROwner || global.prems?.map(v => v.replace(/[^0-9]/g, '') + '@s.whatsapp.net').includes(normalizedSender) || false
+        
+        // --- LOGICA MODERATORI (BLOOD) ---
+        let modsList = global.db.data.chats[m.chat]?.moderatori || []
+        let isMod = modsList.includes(normalizedSender)
+        // ---------------------------------
+
         if (m.isGroup) {
             if (!groupMetadata) {
                 groupMetadata = await fetchGroupMetadataWithRetry(this, m.chat)
@@ -433,7 +439,9 @@ if (m.message?.protocolMessage?.type === 'MESSAGE_EDIT') {
                 })
                 const normalizedOwner = groupMetadata.owner ? this.decodeJid(groupMetadata.owner) : null
                 const normalizedOwnerLid = groupMetadata.ownerLid ? this.decodeJid(groupMetadata.ownerLid) : null
-                isAdmin = participants.some(u => {
+                
+                // MODIFICATO: Controllo isMod aggiunto qui
+                isAdmin = (participants.some(u => {
                     const participantIds = [
                         this.decodeJid(u.id),
                         u.jid ? this.decodeJid(u.jid) : null,
@@ -441,7 +449,7 @@ if (m.message?.protocolMessage?.type === 'MESSAGE_EDIT') {
                     ].filter(Boolean)
                     const isMatch = participantIds.includes(normalizedSender)
                     return isMatch && (u.admin === 'admin' || u.admin === 'superadmin' || u.isAdmin === true || u.admin === true)
-                })
+                }) || isMod)
 
                 isBotAdmin = participants.some(u => {
                     const participantIds = [
@@ -466,7 +474,8 @@ if (m.message?.protocolMessage?.type === 'MESSAGE_EDIT') {
                             return { ...u, id: normalizedId, jid: u.jid || normalizedId }
                         })
 
-                        isAdmin = participants.some(u => {
+                        // MODIFICATO: Controllo isMod aggiunto anche nel fallback
+                        isAdmin = (participants.some(u => {
                             const participantIds = [
                                 this.decodeJid(u.id),
                                 u.jid ? this.decodeJid(u.jid) : null,
@@ -474,7 +483,7 @@ if (m.message?.protocolMessage?.type === 'MESSAGE_EDIT') {
                             ].filter(Boolean)
                             const isMatch = participantIds.includes(normalizedSender)
                             return isMatch && (u.admin === 'admin' || u.admin === 'superadmin' || u.isAdmin === true || u.admin === true)
-                        })
+                        }) || isMod)
 
                         isBotAdmin = participants.some(u => {
                             const participantIds = [
@@ -537,7 +546,7 @@ if (m.message?.protocolMessage?.type === 'MESSAGE_EDIT') {
             }
 
             if (typeof plugin !== 'function') continue
-            
+
             if (!match || !match[0]) continue
 
             usedPrefix = (match[0] || '')[0]
@@ -570,7 +579,8 @@ if (m.message?.protocolMessage?.type === 'MESSAGE_EDIT') {
                         const normalizedOwner = groupMetadata.owner ? this.decodeJid(groupMetadata.owner) : null
                         const normalizedOwnerLid = groupMetadata.ownerLid ? this.decodeJid(groupMetadata.ownerLid) : null
 
-                        isAdmin = participants.some(u => {
+                        // MODIFICATO: Controllo isMod anche nel ricalcolo plugin
+                        isAdmin = (participants.some(u => {
                             const participantIds = [
                                 this.decodeJid(u.id),
                                 u.jid ? this.decodeJid(u.jid) : null,
@@ -578,7 +588,7 @@ if (m.message?.protocolMessage?.type === 'MESSAGE_EDIT') {
                             ].filter(Boolean)
                             const isMatch = participantIds.includes(normalizedSender)
                             return isMatch && (u.admin === 'admin' || u.admin === 'superadmin' || u.isAdmin === true || u.admin === true)
-                        })
+                        }) || isMod)
 
                         isBotAdmin = participants.some(u => {
                             const participantIds = [

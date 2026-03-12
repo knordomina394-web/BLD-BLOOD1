@@ -1,98 +1,89 @@
-import axios from 'axios'
-import ytSearch from 'yt-search'
+import yts from "yt-search";
+import { exec } from "child_process";
+import fs from "fs";
 
-let handler = async (m, { conn, command, text, usedPrefix }) => {
-    if (!text) return m.reply(`*╭─ׄ✦☾⋆⁺₊✧ Bloodbot ✧₊⁺⋆☽✦─ׅ⭒*\n*├* ⁉️ _Uso:_ \`${usedPrefix + command} <nome/url>\`\n*╰⭒─ׄ─ׅ─ׄ─⭒─ׄ─ׅ─ׄ─*`)
+const ytmp3 = (url) => {
+  return new Promise((resolve, reject) => {
+    const file = `./tmp/${Date.now()}.mp3`;
+    exec(
+      `yt-dlp -x --audio-format mp3 -o "${file}" ${url}`,
+      (err) => {
+        if (err) reject(err);
+        else resolve(file);
+      }
+    );
+  });
+};
 
-    try {
-        // 1. RICERCA
-        const search = await ytSearch(text)
-        const video = search.videos[0]
-        if (!video) return m.reply('❌ Nessun risultato trovato.')
+const ytmp4 = (url) => {
+  return new Promise((resolve, reject) => {
+    const file = `./tmp/${Date.now()}.mp4`;
+    exec(
+      `yt-dlp -f mp4 -o "${file}" ${url}`,
+      (err) => {
+        if (err) reject(err);
+        else resolve(file);
+      }
+    );
+  });
+};
 
-        // 2. MENU CON I BOTTONI CHE FUNZIONAVANO (.play)
-        if (command === 'play') {
-            const buttons = [
-                {
-                    buttonId: `${usedPrefix}playaudio ${video.url}`,
-                    buttonText: { displayText: '🎵 AUDIO (MP3)' },
-                    type: 1
-                },
-                {
-                    buttonId: `${usedPrefix}playvideo ${video.url}`,
-                    buttonText: { displayText: '🎥 VIDEO (MP4)' },
-                    type: 1
-                }
-            ]
+const handler = async (m, { conn, text, command }) => {
+  try {
+    if (!text?.trim()) return conn.reply(m.chat, `*Inserisci il nome della song*.`, m);
 
-            const buttonMessage = {
-                image: { url: video.thumbnail },
-                caption: `*╭─ׄ✦☾⋆⁺₊✧ Bloodbot ✧₊⁺⋆☽✦─ׅ⭒*\n*├* 📝 *Titolo:* ${video.title}\n*├* ⏱️ *Durata:* ${video.timestamp}\n*├* 👤 *Canale:* ${video.author.name}\n*╰⭒─ׄ─ׅ─ׄ─⭒─ׄ─ׅ─ׄ─*`,
-                footer: 'Scegli il formato qui sotto',
-                buttons: buttons,
-                headerType: 4
-            }
+    const search = await yts(text);
+    if (!search.all.length) return conn.reply(m.chat, '*Non ho trovato un cazzo che musica di merda ascolti*.', m);
 
-            return await conn.sendMessage(m.chat, buttonMessage, { quoted: m })
-        }
+    const videoInfo = search.all[0];
+    const { title, url } = videoInfo;
 
-        // 3. ESECUZIONE DOWNLOAD (.playaudio o .playvideo)
-        await m.reply('⏳ _Download in corso... sto aggirando i blocchi di YouTube._')
+    if (command === 'play1') {
+      await conn.reply(m.chat, '*Sto sistemando il tuo audio aspetta* `, m);
+      const audio = await ytmp3(url);
+      await conn.sendMessage(
+        m.chat,
+        {
+          audio: fs.readFileSync(audio),
+          mimetype: "audio/mpeg",
+          fileName: `${title}.mp3`
+        },
+        { quoted: m }
+      );
+      fs.unlinkSync(audio);
 
-        const isVideo = command === 'playvideo'
-        let downloadUrl = null
+    } else if (command === 'play2' || command === 'ytmp4') {
+      await conn.reply(m.chat, `*Download in corso dammi un secondo*`, m);
+      const video = await ytmp4(url);
 
-        // TENTATIVO CON API DI BYPASS (Per evitare il blocco IP del server)
-        try {
-            // Proviamo la prima API (Vreden)
-            const res = await axios.get(`https://api.vreden.my.id/api/yt${isVideo ? 'mp4' : 'mp3'}?url=${video.url}`)
-            downloadUrl = res.data.result.download
-        } catch (e) {
-            // Fallback su seconda API (Lolhuman)
-            try {
-                const res2 = await axios.get(`https://api.lolhuman.xyz/api/yt${isVideo ? 'video' : 'audio'}?apikey=GataDios&url=${video.url}`)
-                downloadUrl = isVideo ? res2.data.result.video : res2.data.result.audio
-            } catch (e2) {
-                throw new Error("Tutte le API di download sono al momento occupate. Riprova tra poco.")
-            }
-        }
+      const buttons = [
+        { buttonId: `.tomp3 ${text}`, buttonText: { displayText: '*Converti in audio*' }, type: 1 }
+      ];
 
-        if (!downloadUrl) throw new Error("Impossibile ottenere il link di download.")
+      await conn.sendMessage(
+        m.chat,
+        {
+          video: fs.readFileSync(video),
+          mimetype: "video/mp4",
+          fileName: `${title}.mp4`,
+          caption: '*Scaricato ora puoi ascoltare la tua Song*',
+          buttons: buttons,
+          headerType: 4
+        },
+        { quoted: m }
+      );
+      fs.unlinkSync(video);
 
-        // 4. INVIO FILE FINALE
-        if (isVideo) {
-            await conn.sendMessage(m.chat, { 
-                video: { url: downloadUrl }, 
-                caption: `✅ *${video.title}*\n> \`Bloodbot\``,
-                mimetype: 'video/mp4' 
-            }, { quoted: m })
-        } else {
-            await conn.sendMessage(m.chat, { 
-                audio: { url: downloadUrl }, 
-                mimetype: 'audio/mpeg',
-                ptt: false,
-                fileName: `${video.title}.mp3`,
-                contextInfo: {
-                    externalAdReply: {
-                        title: video.title,
-                        body: 'Audio Download - Bloodbot',
-                        thumbnailUrl: video.thumbnail,
-                        sourceUrl: video.url,
-                        mediaType: 1,
-                        showAdAttribution: true
-                    }
-                }
-            }, { quoted: m })
-        }
-
-    } catch (e) {
-        console.error('ERRORE:', e)
-        m.reply(`❌ *ERRORE DI SISTEMA*\n\nYouTube sta bloccando le richieste dal server.\n\n_Dettaglio:_ ${e.message}`)
+    } else {
+      throw "*Comando non riconosciuto".";
     }
-}
 
-handler.command = ['play', 'playaudio', 'playvideo']
-handler.help = ['play <titolo>', 'playaudio <url>', 'playvideo <url>']
-handler.tags = ['download']
+  } catch (error) {
+    return conn.reply(m.chat, `❗ *Errore*: ${error.message}`, m);
+  }
+};
+
+handler.command = handler.help = ['play1', 'ytmp4', 'play2'];
+handler.tags = ['downloader'];
 
 export default handler

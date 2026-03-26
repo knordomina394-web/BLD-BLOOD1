@@ -31,11 +31,10 @@ let handler = async (m, { conn, text, usedPrefix, command }) => {
 
     let type = command.toLowerCase()
 
-    // --- NUOVA SEZIONE: MENU PRINCIPALE .SET ---
     if (type === 'set' && !text) {
-        let menuSet = `ㅤㅤ⋆｡˚『 ╭ **CONFIGURAZIONE** ╯ 』˚｡⋆
+        let menuSet = `ㅤㅤ⋆｡˚『 ╭ *CONFIGURAZIONE* ╯ 』˚｡⋆
 ╭──────────────────⭒
-│ 🛠️ **GESTISCI IL TUO PROFILO**
+│ 🛠️ *GESTISCI IL TUO PROFILO*
 │
 │ *Personalizza le informazioni che verranno*
 │ *mostrate pubblicamente nel tuo profilo!*
@@ -79,15 +78,14 @@ let handler = async (m, { conn, text, usedPrefix, command }) => {
         if (type === 'del') return
 
         const helpMessages = {
-            setdesc: `ㅤㅤ⋆｡˚『 ╭ **DESCRIZIONE** ╯ 』˚｡⋆\n╭\n│  『 📝 』 **Imposta la tua biografia**\n│      *⤷* *Massimo 100 caratteri*\n│\n│  『 💡 』 **Esempio:**\n│      *⤷* *${usedPrefix}setdesc Sono un tipo tosto*\n│\n*╰⭒─ׄ─ׅ─ׄ─⭒─ׄ─ׅ─ׄ─*`,
-            setgenere: `ㅤㅤ⋆｡˚『 ╭ **GENERE** ╯ 』˚｡⋆\n╭\n│  『 ⚧️ 』 **Definisci il tuo genere**\n│\n│  『 📌 』 **Opzioni consigliate:**\n│      *⤷* *Uomo, Donna, Altro*\n│\n*╰⭒─ׄ─ׅ─ׄ─⭒─ׄ─ׅ─ׄ─*`,
-            setig: `ㅤㅤ⋆｡˚『 ╭ **INSTAGRAM** ╯ 』˚｡⋆\n╭\n│  『 📸 』 **Collega il tuo profilo**\n│      *⤷* *Inserisci solo lo username*\n│\n│  『 💡 』 **Esempio:**\n│      *⤷* *${usedPrefix}setig cristiano*\n│\n*╰⭒─ׄ─ׅ─ׄ─⭒─ׄ─ׅ─ׄ─*`,
-            setcompleanno: `ㅤㅤ⋆｡˚『 ╭ **COMPLEANNO** ╯ 』˚｡⋆\n╭\n│  『 🎂 』 **La tua data di nascita**\n│      *⤷* *Formato richiesto: DD/MM/YYYY*\n│\n│  『 💡 』 **Esempio:**\n│      *⤷* *${usedPrefix}setcompleanno 01/01/2000*\n│\n*╰⭒─ׄ─ׅ─ׄ─⭒─ׄ─ׅ─ׄ─*`
-            // ... (aggiungi gli altri se desideri messaggi specifici per ogni comando vuoto)
+            setdesc: `ㅤㅤ⋆｡˚『 ╭ *DESCRIZIONE* ╯ 』˚｡⋆\n╭\n│  『 📝 』 *Imposta la tua biografia*\n│      *⤷* *Massimo 100 caratteri*\n│\n│  『 💡 』 *Esempio:*\n│      *⤷* *${usedPrefix}setdesc Sono un tipo tosto*\n│\n*╰⭒─ׄ─ׅ─ׄ─⭒─ׄ─ׅ─ׄ─*`,
+            setgenere: `ㅤㅤ⋆｡˚『 ╭ *GENERE* ╯ 』˚｡⋆\n╭\n│  『 ⚧️ 』 *Definisci il tuo genere*\n│\n│  『 📌 』 *Opzioni consigliate:*\n│      *⤷* *Uomo, Donna, Altro*\n│\n*╰⭒─ׄ─ׅ─ׄ─⭒─ׄ─ׅ─ׄ─*`,
+            setig: `ㅤㅤ⋆｡˚『 ╭ *INSTAGRAM* ╯ 』˚｡⋆\n╭\n│  『 📸 』 *Collega il tuo profilo*\n│      *⤷* *Inserisci solo lo username*\n│\n│  『 💡 』 *Esempio:*\n│      *⤷* *${usedPrefix}setig cristiano*\n│\n*╰⭒─ׄ─ׅ─ׄ─⭒─ׄ─ׅ─ׄ─*`,
+            setcompleanno: `ㅤㅤ⋆｡˚『 ╭ *COMPLEANNO* ╯ 』˚｡⋆\n╭\n│  『 🎂 』 *La tua data di nascita*\n│      *⤷* *Formato richiesto: DD/MM/YYYY*\n│\n│  『 💡 』 *Esempio:*\n│      *⤷* *${usedPrefix}setcompleanno 01/01/2000*\n│\n*╰⭒─ׄ─ׅ─ׄ─⭒─ׄ─ׅ─ׄ─*`
         }
 
         await conn.sendMessage(m.chat, {
-            text: helpMessages[type] || `『 💡 』 **Usa:** \`${usedPrefix}${type} [testo]\` **per aggiornare questo campo.**`,
+            text: helpMessages[type] || `『 💡 』 *Usa:* \`${usedPrefix}${type} [testo]\` *per aggiornare questo campo.*`,
             contextInfo: {
                 externalAdReply: {
                     title: `Configurazione Profilo`,
@@ -111,32 +109,31 @@ let handler = async (m, { conn, text, usedPrefix, command }) => {
 
         const fieldToDelete = text.toLowerCase()
         if (!validFields[fieldToDelete]) {
-            await m.reply(`『 ❌ 』 **Campo non valido!**\nUsa: \`${usedPrefix}del bio\`, \`${usedPrefix}del ig\`, ecc.`)
+            await m.reply(`『 ❌ 』 *Campo non valido!*\nUsa: \`${usedPrefix}del bio\`, \`${usedPrefix}del ig\`, ecc.`)
             return
         }
 
         const actualField = validFields[fieldToDelete]
         user.profile[actualField] = ''
         await m.react('🗑️')
-        await m.reply(`『 ✅ 』 **Campo** *${fieldToDelete}* **resettato correttamente.**`)
+        await m.reply(`『 ✅ 』 *Campo* *${fieldToDelete}* *resettato correttamente.*`)
         return
     }
 
-    // --- LOGICA DI SALVATAGGIO ---
     switch (type) {
         case 'setdesc':
         case 'setbio':
-            if (text.length > 100) return m.reply('『 ❌ 』 **Troppo lungo!** Max 100 caratteri.')
+            if (text.length > 100) return m.reply('『 ❌ 』 *Troppo lungo!* Max 100 caratteri.')
             user.profile.description = text
             break
         case 'setgenere': user.profile.gender = text; break
         case 'setig':
-            if (!text.match(/^[a-zA-Z0-9._]+$/)) return m.reply('『 ❌ 』 **Username non valido!**')
+            if (!text.match(/^[a-zA-Z0-9._]+$/)) return m.reply('『 ❌ 』 *Username non valido!*')
             user.profile.instagram = text
             break
         case 'setcitta': user.profile.city = text; break
         case 'setcompleanno':
-            if (!text.match(/^\d{2}\/\d{2}\/\d{4}$/)) return m.reply('『 ❌ 』 **Usa il formato:** *DD/MM/YYYY*')
+            if (!text.match(/^\d{2}\/\d{2}\/\d{4}$/)) return m.reply('『 ❌ 』 *Usa il formato:* *DD/MM/YYYY*')
             user.profile.birthday = text
             break
         case 'sethobby': user.profile.hobby = text; break
@@ -165,7 +162,7 @@ let handler = async (m, { conn, text, usedPrefix, command }) => {
     let [emoji, label] = fieldMap[type] || ['✨', 'Profilo']
 
     await conn.sendMessage(m.chat, {
-        text: `ㅤㅤ⋆｡˚『 ╭ **PROFILO AGGIORNATO** ╯ 』˚｡⋆\n╭\n│  『 ✅ 』 **Dati salvati con successo!**\n│  『 ${emoji} 』 **${label}:**\n│      *⤷* *${text}*\n│\n*╰⭒─ׄ─ׅ─ׄ─⭒─ׄ─ׅ─ׄ─*`,
+        text: `ㅤㅤ⋆｡˚『 ╭ *PROFILO AGGIORNATO* ╯ 』˚｡⋆\n╭\n│  『 ✅ 』 *Dati salvati con successo!*\n│  『 ${emoji} 』 *${label}:*\n│      *⤷* *${text}*\n│\n*╰⭒─ׄ─ׅ─ׄ─⭒─ׄ─ׅ─ׄ─*`,
         contextInfo: {
             externalAdReply: {
                 title: `✅ ${label} Aggiornato`,

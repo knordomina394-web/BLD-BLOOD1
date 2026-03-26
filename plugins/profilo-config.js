@@ -18,20 +18,9 @@ let handler = async (m, { conn, text, usedPrefix, command }) => {
     let user = global.db.data.users[m.sender]
     if (!user.profile) {
         user.profile = {
-            description: '',
-            gender: '',
-            instagram: '',
-            city: '',
-            birthday: '',
-            hobby: '',
-            status: '',
-            occupation: '',
-            music: '',
-            food: '',
-            movie: '',
-            game: '',
-            sport: '',
-            language: ''
+            description: '', gender: '', instagram: '', city: '',
+            birthday: '', hobby: '', status: '', occupation: '',
+            music: '', food: '', movie: '', game: '', sport: '', language: ''
         }
     }
 
@@ -42,39 +31,69 @@ let handler = async (m, { conn, text, usedPrefix, command }) => {
 
     let type = command.toLowerCase()
 
-    if (!text) {
-        if (type === 'del') return
-
-        const helpMessages = {
-            setdesc: `ㅤㅤ⋆｡˚『 ╭ \`DESCRIZIONE\` ╯ 』˚｡⋆\n╭\n│  『 📝 』 \`Imposta la tua biografia\`\n│      *⤷* *Massimo 100 caratteri*\n│\n│  『 💡 』 \`Esempio:\`\n│      *⤷* *${usedPrefix}setdesc miglior bot di zozzap*\n│\n*╰⭒─ׄ─ׅ─ׄ─⭒─ׄ─ׅ─ׄ─*`,
-            setgenere: `ㅤㅤ⋆｡˚『 ╭ \`GENERE\` ╯ 』˚｡⋆\n╭\n│  『 ⚧️ 』 \`Definisci il tuo genere\`\n│\n│  『 📌 』 \`Opzioni disponibili:\`\n│      *⤷* *👨🏻 Uomo*\n│      *⤷* *👩🏻 Donna*\n│      *⤷* *🌟 Non specificato*\n│      *⤷* *✨ [Personalizzato]*\n│\n*╰⭒─ׄ─ׅ─ׄ─⭒─ׄ─ׅ─ׄ─*`,
-            setig: `ㅤㅤ⋆｡˚『 ╭ \`INSTAGRAM\` ╯ 』˚｡⋆\n╭\n│  『 📸 』 \`Collega il tuo profilo\`\n│      *⤷* *Solo username*\n│\n│  『 💡 』 \`Esempio:\`\n│      *⤷* *${usedPrefix}setig varebot*\n│\n*╰⭒─ׄ─ׅ─ׄ─⭒─ׄ─ׅ─ׄ─*`,
-            setcitta: `ㅤㅤ⋆｡˚『 ╭ \`CITTÀ\` ╯ 』˚｡⋆\n╭\n│  『 🌆 』 \`La tua città\`\n│\n│  『 💡 』 \`Esempio:\`\n│      *⤷* *${usedPrefix}setcitta faenza*\n│\n*╰⭒─ׄ─ׅ─ׄ─⭒─ׄ─ׅ─ׄ─*`,
-            setcompleanno: `ㅤㅤ⋆｡˚『 ╭ \`COMPLEANNO\` ╯ 』˚｡⋆\n╭\n│  『 🎂 』 \`La tua data di nascita\`\n│      *⤷* *Formato: DD/MM/YYYY*\n│\n│  『 💡 』 \`Esempio:\`\n│      *⤷* *${usedPrefix}setcompleanno 19/04/2008*\n│\n*╰⭒─ׄ─ׅ─ׄ─⭒─ׄ─ׅ─ׄ─*`,
-            sethobby: `ㅤㅤ⋆｡˚『 ╭ \`HOBBY\` ╯ 』˚｡⋆\n╭\n│  『 🎨 』 \`I tuoi interessi\`\n│\n│  『 💡 』 \`Esempio:\`\n│      *⤷* *${usedPrefix}sethobby Musica*\n│\n*╰⭒─ׄ─ׅ─ׄ─⭒─ׄ─ׅ─ׄ─*`,
-            setstato: `ㅤㅤ⋆｡˚『 ╭ \`STATO\` ╯ 』˚｡⋆\n╭\n│  『 💝 』 \`Il tuo stato sentimentale\`\n│\n│  『 📌 』 \`Opzioni:\`\n│      *⤷* *Single*\n│      *⤷* *Fidanzato/a*\n│      *⤷* *Sposato/a*\n│      *⤷* *Divorziato*\n│      *⤷* *Complicato*\n│\n*╰⭒─ׄ─ׅ─ׄ─⭒─ׄ─ׅ─ׄ─*`,
-            setlavoro: `ㅤㅤ⋆｡˚『 ╭ \`LAVORO\` ╯ 』˚｡⋆\n╭\n│  『 💼 』 \`La tua occupazione\`\n│\n│  『 💡 』 \`Esempio:\`\n│      *⤷* *${usedPrefix}setlavoro studente*\n│\n*╰⭒─ׄ─ׅ─ׄ─⭒─ׄ─ׅ─ׄ─*`,
-            setmusica: `ㅤㅤ⋆｡˚『 ╭ \`MUSICA\` ╯ 』˚｡⋆\n╭\n│  『 🎵 』 \`Il tuo genere musicale preferito\`\n│\n│  『 💡 』 \`Esempio:\`\n│      *⤷* *${usedPrefix}setmusica Pop, Rock*\n│\n*╰⭒─ׄ─ׅ─ׄ─⭒─ׄ─ׅ─ׄ─*`,
-            setcibo: `ㅤㅤ⋆｡˚『 ╭ \`CIBO\` ╯ 』˚｡⋆\n╭\n│  『 🍕 』 \`Il tuo piatto preferito\`\n│\n│  『 💡 』 \`Esempio:\`\n│      *⤷* *${usedPrefix}setcibo Pizza Margherita*\n│\n*╰⭒─ׄ─ׅ─ׄ─⭒─ׄ─ׅ─ׄ─*`,
-            setfilm: `ㅤㅤ⋆｡˚『 ╭ \`FILM\` ╯ 』˚｡⋆\n╭\n│  『 🎬 』 \`Il tuo film/serie preferito\`\n│\n│  『 💡 』 \`Esempio:\`\n│      *⤷* *${usedPrefix}setfilm Avengers*\n│\n*╰⭒─ׄ─ׅ─ׄ─⭒─ׄ─ׅ─ׄ─*`,
-            setgioco: `ㅤㅤ⋆｡˚『 ╭ \`GIOCO\` ╯ 』˚｡⋆\n╭\n│  『 🎮 』 \`Il tuo videogioco preferito\`\n│\n│  『 💡 』 \`Esempio:\`\n│      *⤷* *${usedPrefix}setgioco Minecraft*\n│\n*╰⭒─ׄ─ׅ─ׄ─⭒─ׄ─ׅ─ׄ─*`,
-            setsport: `ㅤㅤ⋆｡˚『 ╭ \`SPORT\` ╯ 』˚｡⋆\n╭\n│  『 🏃 』 \`Il tuo sport preferito\`\n│\n│  『 💡 』 \`Esempio:\`\n│      *⤷* *${usedPrefix}setsport Calcio*\n│\n*╰⭒─ׄ─ׅ─ׄ─⭒─ׄ─ׅ─ׄ─*`,
-            setlingua: `ㅤㅤ⋆｡˚『 ╭ \`LINGUA\` ╯ 』˚｡⋆\n╭\n│  『 🌍 』 \`Le tue lingue parlate\`\n│\n│  『 💡 』 \`Esempio:\`\n│      *⤷* *${usedPrefix}setlingua Italiano, Inglese*\n│\n*╰⭒─ׄ─ׅ─ׄ─⭒─ׄ─ׅ─ׄ─*`
-        }
+    // --- NUOVA SEZIONE: MENU PRINCIPALE .SET ---
+    if (type === 'set' && !text) {
+        let menuSet = `ㅤㅤ⋆｡˚『 ╭ **CONFIGURAZIONE** ╯ 』˚｡⋆
+╭──────────────────⭒
+│ 🛠️ **GESTISCI IL TUO PROFILO**
+│
+│ *Personalizza le informazioni che verranno*
+│ *mostrate pubblicamente nel tuo profilo!*
+├──────────────────⭒
+│ 📝 *${usedPrefix}setdesc* (Bio)
+│ ⚧️ *${usedPrefix}setgenere*
+│ 📸 *${usedPrefix}setig* (Instagram)
+│ 🌆 *${usedPrefix}setcitta*
+│ 🎂 *${usedPrefix}setcompleanno*
+│ 🎨 *${usedPrefix}sethobby*
+│ 💝 *${usedPrefix}setstato* (Relazione)
+│ 💼 *${usedPrefix}setlavoro*
+│ 🎵 *${usedPrefix}setmusica*
+│ 🍕 *${usedPrefix}setcibo*
+│ 🎬 *${usedPrefix}setfilm*
+│ 🎮 *${usedPrefix}setgioco*
+│ 🏃 *${usedPrefix}setsport*
+│ 🌍 *${usedPrefix}setlingua*
+├──────────────────⭒
+│ 🗑️ *Usa* \`${usedPrefix}del [nome]\` *per resettare*
+│ *Esempio:* \`${usedPrefix}del bio\`
+╰──────────────────⭒`
 
         await conn.sendMessage(m.chat, {
-            text: helpMessages[type] || '『 ❌ 』- \`Comando non valido\`',
-            mentions: [m.sender],
+            text: menuSet,
             contextInfo: {
-                ...(global.fake?.contextInfo || {}),
                 externalAdReply: {
-                    title: `⚙️ Configurazione Profilo`,
-                    body: `${phone} • Livello ${currentLevel} • ${formatNumber(user.euro || 0)}€`,
+                    title: `⚙️ Pannello Impostazioni: ${name}`,
+                    body: `Configura la tua identità virtuale`,
                     thumbnailUrl: pp,
                     sourceUrl: '',
                     mediaType: 1,
-                    renderLargerThumbnail: false,
-                    showAdAttribution: false
+                    renderLargerThumbnail: true
+                }
+            }
+        }, { quoted: m })
+        return
+    }
+
+    if (!text && type !== 'set') {
+        if (type === 'del') return
+
+        const helpMessages = {
+            setdesc: `ㅤㅤ⋆｡˚『 ╭ **DESCRIZIONE** ╯ 』˚｡⋆\n╭\n│  『 📝 』 **Imposta la tua biografia**\n│      *⤷* *Massimo 100 caratteri*\n│\n│  『 💡 』 **Esempio:**\n│      *⤷* *${usedPrefix}setdesc Sono un tipo tosto*\n│\n*╰⭒─ׄ─ׅ─ׄ─⭒─ׄ─ׅ─ׄ─*`,
+            setgenere: `ㅤㅤ⋆｡˚『 ╭ **GENERE** ╯ 』˚｡⋆\n╭\n│  『 ⚧️ 』 **Definisci il tuo genere**\n│\n│  『 📌 』 **Opzioni consigliate:**\n│      *⤷* *Uomo, Donna, Altro*\n│\n*╰⭒─ׄ─ׅ─ׄ─⭒─ׄ─ׅ─ׄ─*`,
+            setig: `ㅤㅤ⋆｡˚『 ╭ **INSTAGRAM** ╯ 』˚｡⋆\n╭\n│  『 📸 』 **Collega il tuo profilo**\n│      *⤷* *Inserisci solo lo username*\n│\n│  『 💡 』 **Esempio:**\n│      *⤷* *${usedPrefix}setig cristiano*\n│\n*╰⭒─ׄ─ׅ─ׄ─⭒─ׄ─ׅ─ׄ─*`,
+            setcompleanno: `ㅤㅤ⋆｡˚『 ╭ **COMPLEANNO** ╯ 』˚｡⋆\n╭\n│  『 🎂 』 **La tua data di nascita**\n│      *⤷* *Formato richiesto: DD/MM/YYYY*\n│\n│  『 💡 』 **Esempio:**\n│      *⤷* *${usedPrefix}setcompleanno 01/01/2000*\n│\n*╰⭒─ׄ─ׅ─ׄ─⭒─ׄ─ׅ─ׄ─*`
+            // ... (aggiungi gli altri se desideri messaggi specifici per ogni comando vuoto)
+        }
+
+        await conn.sendMessage(m.chat, {
+            text: helpMessages[type] || `『 💡 』 **Usa:** \`${usedPrefix}${type} [testo]\` **per aggiornare questo campo.**`,
+            contextInfo: {
+                externalAdReply: {
+                    title: `Configurazione Profilo`,
+                    body: `${phone} • Livello ${currentLevel}`,
+                    thumbnailUrl: pp,
+                    mediaType: 1
                 }
             }
         }, { quoted: m })
@@ -92,136 +111,34 @@ let handler = async (m, { conn, text, usedPrefix, command }) => {
 
         const fieldToDelete = text.toLowerCase()
         if (!validFields[fieldToDelete]) {
-            await conn.sendMessage(m.chat, {
-                text: `ㅤㅤ⋆｡˚『 ╭ \`ERRORE\` ╯ 』˚｡⋆\n╭\n│  『 ❌ 』 \`Campo non valido!\`\n│\n│  『 📌 』 \`Campi disponibili:\`\n│      *⤷* *${Object.keys(validFields).join(', ')}*\n│\n*╰⭒─ׄ─ׅ─ׄ─⭒─ׄ─ׅ─ׄ─*`,
-                mentions: [m.sender],
-                contextInfo: {
-                    ...(global.fake?.contextInfo || {}),
-                    externalAdReply: {
-                        title: `❌ Errore - Campo non valido`,
-                        body: `${phone} • Livello ${currentLevel}`,
-                        thumbnailUrl: pp,
-                        sourceUrl: '',
-                        mediaType: 1,
-                        renderLargerThumbnail: false
-                    }
-                }
-            }, { quoted: m })
+            await m.reply(`『 ❌ 』 **Campo non valido!**\nUsa: \`${usedPrefix}del bio\`, \`${usedPrefix}del ig\`, ecc.`)
             return
         }
 
         const actualField = validFields[fieldToDelete]
-        const oldValue = user.profile[actualField] || 'Vuoto'
         user.profile[actualField] = ''
-
-        const fieldDisplayNames = {
-            'description': '📝 Bio', 'gender': '⚧️ Genere', 'instagram': '📸 Instagram',
-            'city': '🌆 Città', 'birthday': '🎂 Compleanno', 'hobby': '🎨 Hobby',
-            'status': '💝 Stato', 'occupation': '💼 Lavoro', 'music': '🎵 Musica',
-            'food': '🍕 Cibo', 'movie': '🎬 Film', 'game': '🎮 Gioco',
-            'sport': '🏃 Sport', 'language': '🌍 Lingua'
-        }
-
-        const displayName = fieldDisplayNames[actualField] || '✨ Campo'
-
-        await conn.sendMessage(m.chat, {
-            text: `ㅤㅤ⋆｡˚『 ╭ \`CAMPO ELIMINATO\` ╯ 』˚｡⋆\n╭\n│  『 🗑️ 』 \`Campo rimosso con successo\`\n│\n│  『 ${displayName.split(' ')[0]} 』 \`${displayName.split(' ').slice(1).join(' ')}:\`\n│      *⤷* *Valore precedente: ${oldValue}*\n│      *⤷* *Nuovo valore: Vuoto*\n│\n*╰⭒─ׄ─ׅ─ׄ─⭒─ׄ─ׅ─ׄ─*`,
-            mentions: [m.sender],
-            contextInfo: {
-                ...(global.fake?.contextInfo || {}),
-                externalAdReply: {
-                    title: `🗑️ Campo Eliminato - ${name}`,
-                    body: `${phone} • Livello ${currentLevel} • ${displayName}`,
-                    thumbnailUrl: pp,
-                    sourceUrl: '',
-                    mediaType: 1,
-                    renderLargerThumbnail: false,
-                    showAdAttribution: false
-                }
-            }
-        }, { quoted: m })
-
         await m.react('🗑️')
+        await m.reply(`『 ✅ 』 **Campo** *${fieldToDelete}* **resettato correttamente.**`)
         return
     }
 
+    // --- LOGICA DI SALVATAGGIO ---
     switch (type) {
         case 'setdesc':
         case 'setbio':
-            if (text.length > 100) {
-                await conn.sendMessage(m.chat, {
-                    text: `ㅤㅤ⋆｡˚『 ╭ \`ERRORE\` ╯ 』˚｡⋆\n╭\n│  『 ❌ 』 \`Testo troppo lungo!\`\n│      *⤷* *Massimo: 100 caratteri*\n│      *⤷* *Attuale: ${text.length} caratteri*\n│\n*╰⭒─ׄ─ׅ─ׄ─⭒─ׄ─ׅ─ׄ─*`,
-                    mentions: [m.sender],
-                    contextInfo: {
-                        ...(global.fake?.contextInfo || {}),
-                        externalAdReply: {
-                            title: `❌ Errore - Testo troppo lungo`,
-                            body: `${phone} • ${text.length}/100 caratteri`,
-                            thumbnailUrl: pp,
-                            sourceUrl: '',
-                            mediaType: 1,
-                            renderLargerThumbnail: false
-                        }
-                    }
-                }, { quoted: m })
-                return
-            }
+            if (text.length > 100) return m.reply('『 ❌ 』 **Troppo lungo!** Max 100 caratteri.')
             user.profile.description = text
             break
-
-        case 'setgenere':
-            user.profile.gender = text
-            break
-
+        case 'setgenere': user.profile.gender = text; break
         case 'setig':
-            if (!text.match(/^[a-zA-Z0-9._]+$/)) {
-                await conn.sendMessage(m.chat, {
-                    text: `ㅤㅤ⋆｡˚『 ╭ \`ERRORE\` ╯ 』˚｡⋆\n╭\n│  『 ❌ 』 \`Username Instagram non valido\`\n│      *⤷* *Usa solo lettere, numeri, . e _*\n│\n*╰⭒─ׄ─ׅ─ׄ─⭒─ׄ─ׅ─ׄ─*`,
-                    mentions: [m.sender],
-                    contextInfo: {
-                        ...(global.fake?.contextInfo || {}),
-                        externalAdReply: {
-                            title: `❌ Username Instagram non valido`,
-                            body: `${phone} • Livello ${currentLevel}`,
-                            thumbnailUrl: pp,
-                            sourceUrl: '',
-                            mediaType: 1,
-                            renderLargerThumbnail: false
-                        }
-                    }
-                }, { quoted: m })
-                return
-            }
+            if (!text.match(/^[a-zA-Z0-9._]+$/)) return m.reply('『 ❌ 』 **Username non valido!**')
             user.profile.instagram = text
             break
-
-        case 'setcitta':
-            user.profile.city = text
-            break
-
+        case 'setcitta': user.profile.city = text; break
         case 'setcompleanno':
-            if (!text.match(/^\d{2}\/\d{2}\/\d{4}$/)) {
-                await conn.sendMessage(m.chat, {
-                    text: `ㅤㅤ⋆｡˚『 ╭ \`ERRORE\` ╯ 』˚｡⋆\n╭\n│  『 ❌ 』 _*Formato data non valido*_\n│      *⤷* \`Usa formato DD/MM/YYYY\`\n│      *⤷* \`Esempio: 19/04/2008\`\n│\n*╰⭒─ׄ─ׅ─ׄ─⭒─ׄ─ׅ─ׄ─*`,
-                    mentions: [m.sender],
-                    contextInfo: {
-                        ...(global.fake?.contextInfo || {}),
-                        externalAdReply: {
-                            title: `❌ Formato data non valido`,
-                            body: `${phone} • Usa DD/MM/YYYY`,
-                            thumbnailUrl: pp,
-                            sourceUrl: '',
-                            mediaType: 1,
-                            renderLargerThumbnail: false,
-                            showAdAttribution: false
-                        }
-                    }
-                }, { quoted: m })
-                return
-            }
+            if (!text.match(/^\d{2}\/\d{2}\/\d{4}$/)) return m.reply('『 ❌ 』 **Usa il formato:** *DD/MM/YYYY*')
             user.profile.birthday = text
             break
-
         case 'sethobby': user.profile.hobby = text; break
         case 'setstato': user.profile.status = text; break
         case 'setlavoro': user.profile.occupation = text; break
@@ -231,47 +148,30 @@ let handler = async (m, { conn, text, usedPrefix, command }) => {
         case 'setgioco': user.profile.game = text; break
         case 'setsport': user.profile.sport = text; break
         case 'setlingua': user.profile.language = text; break
-
-        default:
-            await m.reply('『 ❌ 』- \`Comando non valido\`')
-            return
+        default: return
     }
-
-    global.db.data.users[m.sender] = user
 
     const fieldMap = {
-        setdesc: ['description', '📝', 'Bio'],
-        setbio: ['description', '📝', 'Bio'],
-        setgenere: ['gender', '⚧️', 'Genere'],
-        setig: ['instagram', '📸', 'Instagram'],
-        setcitta: ['city', '🌆', 'Città'],
-        setcompleanno: ['birthday', '🎂', 'Compleanno'],
-        sethobby: ['hobby', '🎨', 'Hobby'],
-        setstato: ['status', '💝', 'Stato'],
-        setlavoro: ['occupation', '💼', 'Lavoro'],
-        setmusica: ['music', '🎵', 'Musica'],
-        setcibo: ['food', '🍕', 'Cibo'],
-        setfilm: ['movie', '🎬', 'Film'],
-        setgioco: ['game', '🎮', 'Gioco'],
-        setsport: ['sport', '🏃', 'Sport'],
-        setlingua: ['language', '🌍', 'Lingua']
+        setdesc: ['📝', 'Bio'], setbio: ['📝', 'Bio'],
+        setgenere: ['⚧️', 'Genere'], setig: ['📸', 'Instagram'],
+        setcitta: ['🌆', 'Città'], setcompleanno: ['🎂', 'Compleanno'],
+        sethobby: ['🎨', 'Hobby'], setstato: ['💝', 'Stato'],
+        setlavoro: ['💼', 'Lavoro'], setmusica: ['🎵', 'Musica'],
+        setcibo: ['🍕', 'Cibo'], setfilm: ['🎬', 'Film'],
+        setgioco: ['🎮', 'Gioco'], setsport: ['🏃', 'Sport'],
+        setlingua: ['🌍', 'Lingua']
     }
 
-    let [field, emoji, label] = fieldMap[type] || ['description', '✨', 'Profilo']
-    let newValue = user.profile[field]
+    let [emoji, label] = fieldMap[type] || ['✨', 'Profilo']
 
     await conn.sendMessage(m.chat, {
-        text: `ㅤㅤ⋆｡˚『 ╭ \`PROFILO AGGIORNATO\` ╯ 』˚｡⋆\n╭\n│  『 ✅ 』 _*salvato con successo*_\n│  『 ${emoji} 』 \`${label}:\`\n│      *⤷* *${newValue}*\n│\n*╰⭒─ׄ─ׅ─ׄ─⭒─ׄ─ׅ─ׄ─*`,
-        mentions: [m.sender],
+        text: `ㅤㅤ⋆｡˚『 ╭ **PROFILO AGGIORNATO** ╯ 』˚｡⋆\n╭\n│  『 ✅ 』 **Dati salvati con successo!**\n│  『 ${emoji} 』 **${label}:**\n│      *⤷* *${text}*\n│\n*╰⭒─ׄ─ׅ─ׄ─⭒─ׄ─ׅ─ׄ─*`,
         contextInfo: {
-            ...(global.fake?.contextInfo || {}),
             externalAdReply: {
-                title: `✅ ${label} Aggiornato - ${name}`,
-                body: `${phone} • Livello ${currentLevel} • ${formatNumber(user.euro || 0)}€`,
+                title: `✅ ${label} Aggiornato`,
+                body: `${name} • ${phone}`,
                 thumbnailUrl: pp,
-                sourceUrl: '',
-                mediaType: 1,
-                renderLargerThumbnail: false
+                mediaType: 1
             }
         }
     }, { quoted: m })
@@ -280,6 +180,6 @@ let handler = async (m, { conn, text, usedPrefix, command }) => {
 }
 
 handler.tags = ['profilo']
-handler.command = /^(set(desc|bio|genere|ig|citta|compleanno|hobby|stato|lavoro|musica|cibo|film|gioco|sport|lingua)|del)$/i
+handler.command = /^(set(desc|bio|genere|ig|citta|compleanno|hobby|stato|lavoro|musica|cibo|film|gioco|sport|lingua)?|del)$/i
 handler.register = true
 export default handler

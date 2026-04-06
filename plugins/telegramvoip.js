@@ -8,13 +8,16 @@ const apiHash = 'b18441a1ff607e10a989891a5462e627';
 const targetBotUsername = "Number_Nest_Bot";
 const sessionSaved = "1BAAOMTQ5LjE1NC4xNjcuOTEAUB9OQLQkNqxtxPwutWa2/cpTA8jxTWL1WgZojzgQL+RSVbiUMnVC71ydpMfscNdF5bCR9ijjwkkb3SD5/LRFNC+KGpPiJBDNr48MAT1TQZI9WA/Ld/RhjKu2/jThMk5pnJ3pSzDF3eWaD3KOjVqPNRQ5diSpO55KVHvkWp10albKXG1yXFOSOrcT7i8tg+hRNqfIWp334sXiYt6o+WP+JuSQXeheXMRvPIo17H/vVIbQN66hVsxOa/SKQgzzhQD9fXNeOIoSO6owjtJsmbwH1r9b/OB+hZ3J7Xd9o4gjv9clALS2SyB+A/Vs2/V4j/I/oKAFUpS7DbwoVD1oJ5Xh90A";
 
-global.tgVoip = global.tgVoip || {
-    client: null,
-    conn: null,
-    chatId: null,
-    isListening: false,
-    currentButtons: [] // Memorizza i pulsanti dell'ultimo messaggio per indice
-};
+// Inizializzazione sicura dell'oggetto globale
+if (!global.tgVoip) {
+    global.tgVoip = {
+        client: null,
+        conn: null,
+        chatId: null,
+        isListening: false,
+        currentButtons: [] 
+    };
+}
 
 let handler = async (m, { conn, text }) => {
     if (m.isGroup) return;
@@ -33,7 +36,7 @@ let handler = async (m, { conn, text }) => {
                 if (!message) return;
 
                 let testoFinale = "🤖 *RISPOSTA DA TELEGRAM*\n\n" + (message.message || "");
-                global.tgVoip.currentButtons = []; // Reset pulsanti correnti
+                let nuoviBottoni = []; // Usiamo una variabile locale temporanea
 
                 if (message.replyMarkup && message.replyMarkup.rows) {
                     let indice = 1;
@@ -42,8 +45,7 @@ let handler = async (m, { conn, text }) => {
                     for (const row of message.replyMarkup.rows) {
                         for (const button of row.buttons) {
                             if (button.text) {
-                                // Salviamo il riferimento al bottone e al messaggio
-                                global.tgVoip.currentButtons.push({
+                                nuoviBottoni.push({
                                     msg: message,
                                     btn: button
                                 });
@@ -54,6 +56,9 @@ let handler = async (m, { conn, text }) => {
                     }
                     testoFinale += listaTestuale;
                 }
+                
+                // Aggiorniamo l'array globale solo dopo averlo popolato
+                global.tgVoip.currentButtons = nuoviBottoni;
 
                 if (global.tgVoip.conn && global.tgVoip.chatId) {
                     await global.tgVoip.conn.sendMessage(global.tgVoip.chatId, { text: testoFinale });
@@ -66,35 +71,42 @@ let handler = async (m, { conn, text }) => {
         await m.react('📡');
 
     } catch (e) {
-        m.reply("❌ Errore: " + e.message);
+        console.error(e);
     }
 }
 
 handler.before = async (m) => {
-    if (m.isGroup || !m.text || m.text.startsWith('.') || !global.tgVoip.client) return;
+    if (m.isGroup || !m.text || m.text.startsWith('.') || !global.tgVoip?.client) return;
     if (m.chat !== global.tgVoip.chatId) return;
 
-    // Controlliamo se l'utente ha inviato un numero
-    const scelta = parseInt(m.text.trim());
+    const input = m.text.trim();
+    const scelta = parseInt(input);
     
-    if (!isNaN(scelta) && global.tgVoip.currentButtons.length > 0) {
-        const index = scelta - 1; // Gli array partono da 0
-        if (global.tgVoip.currentButtons[index]) {
+    // Controllo di sicurezza: verifichiamo che l'array esista prima di leggere .length
+    const bottoniDisponibili = global.tgVoip.currentButtons || [];
+
+    if (!isNaN(scelta) && bottoniDisponibili.length > 0) {
+        const index = scelta - 1; 
+        if (bottoniDisponibili[index]) {
             try {
-                const target = global.tgVoip.currentButtons[index];
+                const target = bottoniDisponibili[index];
                 await m.react('🔘');
-                // Esegue il click fisico sul pulsante Telegram associato a quel numero
+                // Clicca il pulsante fisico su Telegram
                 await target.msg.click(target.btn);
-                return;
+                return; // Blocca l'esecuzione ulteriore (non invia il testo)
             } catch (err) {
-                console.error("Errore click numerico:", err);
+                console.error("Errore click:", err);
             }
         }
     }
 
-    // Se non è un numero o non ci sono pulsanti, invia come testo normale
-    await global.tgVoip.client.sendMessage(targetBotUsername, { message: m.text });
-    await m.react('📤');
+    // Se non è un numero valido o non ci sono pulsanti, invia come testo semplice
+    try {
+        await global.tgVoip.client.sendMessage(targetBotUsername, { message: m.text });
+        await m.react('📤');
+    } catch (e) {
+        console.error("Errore invio testo:", e);
+    }
 }
 
 handler.command = ['voip']

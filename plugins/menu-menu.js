@@ -108,10 +108,12 @@ let handler = async (m, { conn, usedPrefix: _p, __dirname }) => {
         {
           title: "📂 CATEGORIE OPERATIVE",
           rows: [
-            { header: "『 🎮 』", title: "Menu Giochi", description: "Sfide, Divertimento e Classifiche", id: _p + "menugiochi" },
+            { header: "『 🎮 』", title: "Menu Giochi", description: "Sfide, Divertimento e Classifiche", id: _p + "menugiochi" }, // AGGIUNTO
             { header: "『 🤖 』", title: "Menu IA", description: "Interazione con Intelligenza Artificiale", id: _p + "menuia" },
-            { header: "『 👥 』", title: "Menu Gruppo", description: "Comandi per la gestione dei membri", id: _p + "menugruppo" },
-            { header: "『 🛠️ 』", title: "Menu Strumenti", description: "Utility e strumenti vari", id: _p + "menustrumenti" },
+            { header: "『 ⭐ 』", title: "Menu Premium", description: "Comandi esclusivi per utenti Premium", id: _p + "menupremium" },
+            { header: "『 🛠️ 』", title: "Menu Strumenti", description: "Utility, Loghi e strumenti vari", id: _p + "menustrumenti" },
+            { header: "『 👥 』", title: "Menu Gruppo", description: "Comandi per la gestione del gruppo", id: _p + "menugruppo" },
+            { header: "『 📥 』", title: "Menu Download", description: "Scarica video e musica dai Social", id: _p + "menudownload" },
             { header: "『 👨‍💻 』", title: "Menu Creatore", description: "Pannello riservato all'Owner", id: _p + "menucreatore" }
           ]
         }

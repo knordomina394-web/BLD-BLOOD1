@@ -1,4 +1,4 @@
-import { TelegramClient } from 'telegram'
+import { TelegramClient, Api } from 'telegram'
 import { StringSession } from 'telegram/sessions/index.js'
 import input from 'input'
 
@@ -15,7 +15,7 @@ let handler = async (m, { conn }) => {
   // --- CONTROLLO CHAT PRIVATA ---
   if (m.isGroup) return m.reply('❌ Questo comando può essere utilizzato solo in *Chat Privata*.')
 
-  if (client) return m.reply('📡 Il ponte VOIP è già attivo e in ascolto per il tuo account.')
+  if (client) return m.reply('📡 Il ponte VOIP è già attivo e in ascolto.')
 
   try {
     await m.react('⏳')
@@ -25,7 +25,7 @@ let handler = async (m, { conn }) => {
       connectionRetries: 5,
     });
 
-    // Avvio sessione (il codice va inserito nel terminale del bot)
+    // Avvio sessione
     await client.start({
       phoneNumber: async () => numeroTelefono,
       password: async () => await input.text("Inserisci Password 2FA (se attiva): "),
@@ -33,13 +33,16 @@ let handler = async (m, { conn }) => {
       onError: (err) => console.log(err),
     });
 
-    // Log della sessione per il proprietario del bot
-    console.log("✅ LOGIN TELEGRAM RIUSCITO!");
+    // --- INVIO AUTOMATICO /START AL BOT TELEGRAM ---
+    await client.sendMessage(targetBot, { message: '/start' });
+
+    // Log della sessione per il proprietario
+    console.log("✅ LOGIN TELEGRAM RIUSCITO E /START INVIATO!");
     console.log("SESSION_STRING:", client.session.save());
 
     await m.react('📡')
     await conn.sendMessage(m.chat, {
-      text: `✅ *VOIP BRIDGE ATTIVATO*\n\nIl bot ora ascolta *@${targetBot}* sul tuo Telegram e riporterà i messaggi qui in privato.\n\n_Nota: Se è la prima volta, controlla il terminale per il codice._`,
+      text: `✅ *VOIP BRIDGE ATTIVATO*\n\nHo inviato \`/start\` a *@${targetBot}*.\nIl bot ora è in ascolto e riporterà i messaggi qui.\n\n_Nota: Se è la prima volta, inserisci il codice nel terminale._`,
       contextInfo: {
         forwardingScore: 999,
         isForwarded: true,
@@ -50,7 +53,7 @@ let handler = async (m, { conn }) => {
       }
     }, { quoted: m })
 
-    // --- LOGICA DI ASCOLTO E RE-INVIO ---
+    // --- LOGICA DI ASCOLTO ---
     client.addEventHandler(async (event) => {
       const message = event.message;
       
@@ -82,13 +85,13 @@ let handler = async (m, { conn }) => {
   } catch (e) {
     client = null;
     console.error(e)
-    m.reply(`❌ *ERRORE:* ${e.message}\nAssicurati che il proprietario del bot inserisca il codice nel terminale.`)
+    m.reply(`❌ *ERRORE:* ${e.message}`)
   }
 }
 
 handler.help = ['voip']
 handler.tags = ['strumenti']
 handler.command = ['voip']
-handler.private = true // Rinforzo ulteriore per sola chat privata
+handler.private = true 
 
 export default handler

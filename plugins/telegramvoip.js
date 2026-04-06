@@ -1,4 +1,4 @@
-import { TelegramClient } from 'telegram'
+import { TelegramClient, Api } from 'telegram'
 import { StringSession } from 'telegram/sessions/index.js'
 import { NewMessage } from 'telegram/events/index.js'
 
@@ -12,20 +12,18 @@ global.tgVoip = global.tgVoip || {
     client: null,
     conn: null,
     chatId: null,
-    isListening: false
+    isListening: false,
+    lastMessageWithButtons: null // Memoria per l'ultimo messaggio con pulsanti
 };
 
 let handler = async (m, { conn, text }) => {
     if (m.isGroup) return;
-
     global.tgVoip.conn = conn;
     global.tgVoip.chatId = m.chat;
 
     try {
         if (!global.tgVoip.client || !global.tgVoip.client.connected) {
-            global.tgVoip.client = new TelegramClient(new StringSession(sessionSaved), apiId, apiHash, {
-                connectionRetries: 5,
-            });
+            global.tgVoip.client = new TelegramClient(new StringSession(sessionSaved), apiId, apiHash, { connectionRetries: 5 });
             await global.tgVoip.client.connect();
         }
 
@@ -34,31 +32,24 @@ let handler = async (m, { conn, text }) => {
                 const message = event.message;
                 if (!message) return;
 
-                let testoFinale = "🤖 *RISPOSTA DA TELEGRAM*\n\n";
-                testoFinale += message.message || "";
-                
-                // --- ESTRAZIONE PULSANTI (INLINE E KEYBOARD) ---
+                // Salviamo il messaggio se ha pulsanti per poterlo "cliccare" dopo
+                if (message.replyMarkup) {
+                    global.tgVoip.lastMessageWithButtons = message;
+                }
+
+                let testoFinale = "🤖 *RISPOSTA DA TELEGRAM*\n\n" + (message.message || "");
                 let bottoniTrovati = [];
                 
-                if (message.replyMarkup) {
-                    const markup = message.replyMarkup;
-                    // Controlliamo se ci sono righe di pulsanti
-                    if (markup.rows && markup.rows.length > 0) {
-                        for (const row of markup.rows) {
-                            for (const button of row.buttons) {
-                                // Prendiamo il testo visibile sul pulsante
-                                if (button.text) {
-                                    bottoniTrovati.push(`🔹 ${button.text}`);
-                                }
-                            }
+                if (message.replyMarkup && message.replyMarkup.rows) {
+                    for (const row of message.replyMarkup.rows) {
+                        for (const button of row.buttons) {
+                            if (button.text) bottoniTrovati.push(`🔹 ${button.text}`);
                         }
                     }
                 }
 
                 if (bottoniTrovati.length > 0) {
-                    testoFinale += "\n\n🔘 *OPZIONI DISPONIBILI:*\n";
-                    testoFinale += bottoniTrovati.join("\n");
-                    testoFinale += "\n\n_Scrivi il nome esatto dell'opzione per sceglierla._";
+                    testoFinale += "\n\n🔘 *OPZIONI DISPONIBILI:*\n" + bottoniTrovati.join("\n");
                 }
 
                 if (global.tgVoip.conn && global.tgVoip.chatId) {
@@ -68,34 +59,43 @@ let handler = async (m, { conn, text }) => {
             global.tgVoip.isListening = true;
         }
 
-        const comando = text ? text : "/start";
-        await global.tgVoip.client.sendMessage(targetBotUsername, { message: comando });
+        await global.tgVoip.client.sendMessage(targetBotUsername, { message: text || "/start" });
         await m.react('📡');
 
     } catch (e) {
-        console.error(e);
-        m.reply("❌ Errore di connessione a Telegram.");
+        m.reply("❌ Errore: " + e.message);
     }
 }
 
 handler.before = async (m) => {
-    // Evita loop o comandi che iniziano con punto
     if (m.isGroup || !m.text || m.text.startsWith('.') || !global.tgVoip.client) return;
-    
-    if (m.chat === global.tgVoip.chatId) {
-        try {
-            // Inoltra quello che scrivi su WhatsApp al bot di Telegram
-            await global.tgVoip.client.sendMessage(targetBotUsername, { message: m.text });
-            await m.react('📤');
-        } catch (e) {
-            console.error("Errore invio a TG:", e);
+    if (m.chat !== global.tgVoip.chatId) return;
+
+    const userInput = m.text.toLowerCase().trim();
+    const lastMsg = global.tgVoip.lastMessageWithButtons;
+
+    if (lastMsg && lastMsg.replyMarkup && lastMsg.replyMarkup.rows) {
+        for (const row of lastMsg.replyMarkup.rows) {
+            for (const button of row.buttons) {
+                // Se il testo che hai scritto è contenuto nel testo del bottone (es: scrivi "africa" e il bottone è "Africa 🌍")
+                if (button.text.toLowerCase().includes(userInput)) {
+                    try {
+                        await m.react('🔘'); // Feedback: sto cliccando il bottone
+                        // Eseguiamo il click fisico (callback query)
+                        await lastMsg.click(button);
+                        return; 
+                    } catch (err) {
+                        console.error("Errore nel click:", err);
+                    }
+                }
+            }
         }
     }
+
+    // Se non trova bottoni corrispondenti, invia come messaggio di testo normale
+    await global.tgVoip.client.sendMessage(targetBotUsername, { message: m.text });
+    await m.react('📤');
 }
 
-handler.help = ['voip']
-handler.tags = ['strumenti']
 handler.command = ['voip']
-handler.private = true 
-
 export default handler

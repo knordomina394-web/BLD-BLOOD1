@@ -2,15 +2,22 @@ let handler = async (m, { conn, text, command, isAdmin, isOwner }) => {
   const chat = global.db.data.chats[m.chat]
   const isAntinukeOn = chat?.antinuke
   const sender = m.sender
+  
+  // Verifichiamo se l'utente è un moderatore registrato nel bot
+  const isMod = global.db.data.users[m.sender]?.moderator || false
 
   // --- CONTROLLO SICUREZZA FONDAMENTALE ---
+  // Aggiunto controllo: se è un moderatore, viene bloccato (possono solo Admin reali e Owner)
+  if (isMod) {
+    return conn.reply(m.chat, '『 ⛔ 』 𝐀𝐜𝐜𝐞𝐬𝐬𝐨 𝐍𝐞𝐠𝐚𝐭𝐨: I moderatori non possono gestire i gradi del gruppo.', m)
+  }
+
   // Se chi scrive NON è Admin e NON è Owner, non può fare nulla.
   if (!isAdmin && !isOwner) {
-    return conn.reply(m.chat, '『 ❌ 』 𝐀𝐜𝐜𝐞𝐬𝐬𝐨 𝐃𝐞negato: Non sei un amministratore.', m)
+    return conn.reply(m.chat, '『 ❌ 』 𝐀𝐜𝐜𝐞𝐬𝐬𝐨 𝐃𝐞𝐧𝐞𝐠𝐚𝐭𝐨: Non sei un amministratore.', m)
   }
 
   // --- LOGICA PERMESSI DINAMICI (ANTINUKE) ---
-  // Se l'antinuke è ON, gli admin normali vengono bloccati. Solo l'Owner può promuovere.
   if (isAntinukeOn && !isOwner) {
     return conn.reply(m.chat, '『 🛡️ 』 𝐀𝐧𝐭𝐢𝐧𝐮𝐤𝐞 𝐀𝐭𝐭𝐢𝐯𝐨: In questa modalità solo il Creatore può gestire i gradi.', m)
   }
@@ -23,13 +30,12 @@ let handler = async (m, { conn, text, command, isAdmin, isOwner }) => {
   } else if (text && !isNaN(text.replace(/[^0-9]/g, ''))) {
     number = text.replace(/[^0-9]/g, '')
   } else {
-    return conn.reply(m.chat, '『 👤 』 𝐌𝐞𝐧𝐳𝐢𝐨𝐧𝐚 𝐨𝐧 𝐮𝐭𝐞𝐧𝐭𝐞 o quota un messaggio.', m)
+    return conn.reply(m.chat, '『 👤 』 𝐌𝐞𝐧𝐳𝐢𝐨𝐧𝐚 𝐮𝐧 𝐮𝐭𝐞𝐧𝐭𝐞 o quota un messaggio.', m)
   }
 
   let user = number + '@s.whatsapp.net'
   let action, successMsg, errorMsg
 
-  // Evitiamo che qualcuno provi a promuovere se stesso (anche se il bot lo bloccherebbe comunque)
   if (user === sender) return conn.reply(m.chat, '『 🤡 』 Non puoi promuovere/retrocedere te stesso.', m)
 
   if (['promote', 'promuovi', 'p'].includes(command)) {

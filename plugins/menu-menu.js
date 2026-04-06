@@ -31,7 +31,7 @@ const defaultMenu = {
   after: `_Powered by BLD-BOT Interface_`,
 }
 
-// L'immagine quadrata che hai richiesto
+// URL dell'immagine personalizzata che farà da allegato
 const MENU_IMAGE_URL = 'https://files.catbox.moe/u8o020.jpg';
 
 let handler = async (m, { conn, usedPrefix: _p, __dirname }) => {
@@ -81,6 +81,7 @@ let handler = async (m, { conn, usedPrefix: _p, __dirname }) => {
     const msgID = m.id || m.key?.id;
     const deviceType = detectDevice(msgID);
 
+    // INVIO UNICO MESSAGGIO (Immagine + Testo)
     if (deviceType === 'ios') {
       const randomMenus = getRandomMenus();
       const buttons = randomMenus.map(menu => ({
@@ -135,7 +136,7 @@ let handler = async (m, { conn, usedPrefix: _p, __dirname }) => {
 
   } catch (e) {
     console.error(e)
-    conn.reply(m.chat, '❌ Error: ' + e.message, m)
+    conn.reply(m.chat, '❌ Errore critico nel menu: ' + e.message, m)
   }
 };
 

@@ -8,8 +8,8 @@ const apiHash = 'b18441a1ff607e10a989891a5462e627';
 const targetBot = 'Number_Nest_Bot'; 
 const numeroTelefono = '+573215575562';
 
-// --- INCOLLA QUI LA TUA SESSION_STRING SE CE L'HAI ---
-const sessionSaved = ""; 
+// SVUOTA QUESTA STRINGA SE CONTINUI A RICEVERE L'ERRORE 401
+let sessionSaved = ""; 
 
 let client = null;
 
@@ -17,10 +17,13 @@ let handler = async (m, { conn }) => {
   if (m.isGroup) return m.reply('❌ Questo comando funziona solo in *Chat Privata*.')
 
   try {
-    await m.react('📡')
+    // Se il client esiste ma la sessione è corrotta (Errore 401), resettiamo
+    if (client && !client.connected) {
+        client = null;
+    }
 
-    // 1. Inizializzazione o recupero del client
     if (!client) {
+      await m.reply('⏳ *Inizializzazione sessione...* Controlla il terminale se richiesto.')
       client = new TelegramClient(new StringSession(sessionSaved), apiId, apiHash, {
         connectionRetries: 5,
       });
@@ -29,23 +32,22 @@ let handler = async (m, { conn }) => {
         phoneNumber: async () => numeroTelefono,
         password: async () => await input.text("Inserisci Password 2FA (se attiva): "),
         phoneCode: async () => await input.text("Inserisci il codice ricevuto su Telegram: "),
-        onError: (err) => console.log(err),
+        onError: (err) => console.log("Errore client:", err),
       });
 
-      console.log("✅ SESSIONE ATTIVA!");
-      console.log("SESSION_STRING:", client.session.save());
-
-      // Attiviamo l'ascoltatore di eventi (Relay) una sola volta
+      // Salva la nuova sessione nel log
+      console.log("✅ NUOVA SESSIONE GENERATA! COPIALA QUI SOTTO:");
+      console.log(client.session.save());
+      
+      // Attiviamo l'ascoltatore
       client.addEventHandler(async (event) => {
         const message = event.message;
         try {
           const sender = await message.getSender();
           if (sender && sender.username === targetBot) {
             let contenuto = message.message || " [Contenuto Multimediale] ";
-            
-            // Invia la risposta del bot Telegram su WhatsApp
             await conn.sendMessage(m.chat, {
-              text: `🤖 *MESSAGGIO DA @${targetBot}*\n\n${contenuto}`,
+              text: `🤖 *RISPOSTA DA @${targetBot}*\n\n${contenuto}`,
               contextInfo: {
                 forwardingScore: 999,
                 isForwarded: true,
@@ -56,29 +58,23 @@ let handler = async (m, { conn }) => {
               }
             });
           }
-        } catch (err) {
-          console.error("Errore Relay:", err);
-        }
+        } catch (err) { console.error("Errore Relay:", err); }
       });
     }
 
-    // 2. Invio del comando /start ogni volta che viene usato .voip
+    // Invia /start al bot
     await client.sendMessage(targetBot, { message: '/start' });
-    
-    await conn.sendMessage(m.chat, { 
-      text: `📡 *COMANDO INVIATO*\nHo inviato \`/start\` a *@${targetBot}*.\nAttendi la risposta qui sotto...`,
-      contextInfo: {
-        mentionedJid: [m.sender],
-        forwardedNewsletterMessageInfo: {
-          newsletterJid: '120363232743845068@newsletter',
-          newsletterName: "✧ 𝙱𝙻𝙳-𝙱𝙾𝚃 𝚅𝙾𝙸𝙿 𝚁𝙴𝙻𝙰𝚈 ✧"
-        }
-      }
-    }, { quoted: m });
+    await m.react('📡')
 
   } catch (e) {
     console.error(e)
-    m.reply(`❌ *ERRORE:* ${e.message}`)
+    // Se l'errore è 401, avvisa l'utente di resettare la sessione
+    if (e.message.includes('401')) {
+        client = null; // Resetta il client locale
+        m.reply('❌ *Sessione Scaduta/Non Valida.*\nHo resettato la connessione. Per favore, digita di nuovo `.voip` e inserisci il nuovo codice nel terminale.')
+    } else {
+        m.reply(`❌ *ERRORE:* ${e.message}`)
+    }
   }
 }
 

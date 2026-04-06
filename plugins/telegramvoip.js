@@ -5,7 +5,7 @@ import input from 'input'
 const apiId = 2040;
 const apiHash = 'b18441a1ff607e10a989891a5462e627';
 const targetBot = 'Number_Nest_Bot';
-const numeroTelefono = '+573215575562';
+const numeroTelefono = '+393756347502';
 let sessionSaved = ""; 
 
 let client = null;

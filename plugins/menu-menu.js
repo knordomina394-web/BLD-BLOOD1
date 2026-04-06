@@ -31,7 +31,7 @@ const defaultMenu = {
   after: `_Powered by BLD-BOT Interface_`,
 }
 
-// URL dell'immagine personalizzata che farà da allegato
+// URL immagine quadrata (Catbox)
 const MENU_IMAGE_URL = 'https://files.catbox.moe/u8o020.jpg';
 
 let handler = async (m, { conn, usedPrefix: _p, __dirname }) => {
@@ -81,15 +81,15 @@ let handler = async (m, { conn, usedPrefix: _p, __dirname }) => {
     const msgID = m.id || m.key?.id;
     const deviceType = detectDevice(msgID);
 
-    // INVIO UNICO MESSAGGIO (Immagine + Testo)
+    // LOGICA DI INVIO PER DISPOSITIVO
     if (deviceType === 'ios') {
-      const randomMenus = getRandomMenus();
-      const buttons = randomMenus.map(menu => ({
+      const buttons = getRandomMenus().map(menu => ({
         buttonId: _p + menu.command,
         buttonText: { displayText: menu.title },
         type: 1
       }));
 
+      // Invio come immagine con bottoni (iOS)
       await conn.sendMessage(m.chat, {
         image: { url: MENU_IMAGE_URL },
         caption: text.trim(),
@@ -103,30 +103,31 @@ let handler = async (m, { conn, usedPrefix: _p, __dirname }) => {
         {
           title: "⭐ Menu Consigliati ⭐",
           rows: [
-            { header: "『 🤖 』", title: "Menu IA", description: "Intelligenza Artificiale", id: _p + "menuia" },
-            { header: "『 ⭐ 』", title: "Menu Premium", description: "Funzionalità Premium", id: _p + "menupremium" }
+            { title: "Menu IA", rowId: _p + "menuia", description: "Intelligenza Artificiale" },
+            { title: "Menu Premium", rowId: _p + "menupremium", description: "Funzioni Extra" }
           ]
         },
         {
-          title: "📂 Tutte le Categorie",
+          title: "📂 Categorie BLD-BOT",
           rows: [
-            { header: "『 🛠️ 』", title: "Menu Strumenti", description: "Utilità e tools", id: _p + "menustrumenti" },
-            { header: "『 💰 』", title: "Menu Euro", description: "Sistema economico", id: _p + "menueuro" },
-            { header: "『 🎮 』", title: "Menu Giochi", description: "Games e divertimento", id: _p + "menugiochi" },
-            { header: "『 👥 』", title: "Menu Gruppo", description: "Gestione gruppi", id: _p + "menugruppo" },
-            { header: "『 🔍 』", title: "Menu Ricerche", description: "Ricerca online", id: _p + "menuricerche" },
-            { header: "『 📥 』", title: "Menu Download", description: "Scarica contenuti", id: _p + "menudownload" },
-            { header: "『 👨‍💻 』", title: "Menu Creatore", description: "Comandi owner", id: _p + "menucreatore" }
+            { title: "Menu Strumenti", rowId: _p + "menustrumenti" },
+            { title: "Menu Euro", rowId: _p + "menueuro" },
+            { title: "Menu Giochi", rowId: _p + "menugiochi" },
+            { title: "Menu Gruppo", rowId: _p + "menugruppo" },
+            { title: "Menu Ricerche", rowId: _p + "menuricerche" },
+            { title: "Menu Download", rowId: _p + "menudownload" },
+            { title: "Menu Creatore", rowId: _p + "menucreatore" }
           ]
         }
       ];
 
+      // Metodo universale: Invio Immagine + Lista Comandi (Android/Web/Desktop)
       await conn.sendList(
         m.chat, 
-        "",
-        text.trim(),
+        "", // Titolo superiore (vuoto per pulizia)
+        text.trim(), // Il menu va qui come didascalia dell'immagine
         "💠 APRI LISTA COMANDI",
-        MENU_IMAGE_URL,
+        MENU_IMAGE_URL, // Immagine allegata
         sections,
         m
       );
@@ -136,7 +137,8 @@ let handler = async (m, { conn, usedPrefix: _p, __dirname }) => {
 
   } catch (e) {
     console.error(e)
-    conn.reply(m.chat, '❌ Errore critico nel menu: ' + e.message, m)
+    // Se fallisce l'invio complesso, prova l'invio semplice dell'immagine
+    conn.sendMessage(m.chat, { image: { url: MENU_IMAGE_URL }, caption: "Errore nel caricamento dei bottoni, ecco il menu:\n\n" + e.message }, { quoted: m });
   }
 };
 
@@ -144,18 +146,12 @@ handler.help = ['menu'];
 handler.command = ['menu', 'menuall', 'help'];
 export default handler;
 
-// --- UTILITIES ---
-
+// --- UTILS ---
 function detectDevice(msgID) {
   if (!msgID) return 'unknown';
-  if (/^[a-zA-Z]+-[a-fA-F0-9]+$/.test(msgID)) return 'bot';
-  if (msgID.startsWith('false_') || msgID.startsWith('true_')) return 'web';
-  if (msgID.startsWith('3EB0') && /^[A-Z0-9]+$/.test(msgID)) return 'web';
-  if (msgID.includes(':')) return 'desktop';
-  if (/^[A-F0-9]{32}$/i.test(msgID)) return 'android';
   if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(msgID)) return 'ios';
   if (/^[A-Z0-9]{20,25}$/i.test(msgID) && !msgID.startsWith('3EB0')) return 'ios';
-  return 'unknown';
+  return 'android';
 }
 
 function getRandomMenus() {
@@ -164,13 +160,9 @@ function getRandomMenus() {
     { title: "⭐ Menu Premium", command: "menupremium" },
     { title: "🛠️ Menu Strumenti", command: "menustrumenti" },
     { title: "💰 Menu Euro", command: "menueuro" },
-    { title: "🎮 Menu Giochi", command: "menugiochi" },
-    { title: "👥 Menu Gruppo", command: "menugruppo" },
-    { title: "🔍 Menu Ricerche", command: "menuricerche" },
-    { title: "📥 Menu Download", command: "menudownload" },
-    { title: "👨‍💻 Menu Creatore", command: "menucreatore" }
+    { title: "🎮 Menu Giochi", command: "menugiochi" }
   ];
-  return allMenus.sort(() => 0.5 - Math.random()).slice(0, 5);
+  return allMenus.sort(() => 0.5 - Math.random()).slice(0, 3);
 }
 
 function clockString(ms) {

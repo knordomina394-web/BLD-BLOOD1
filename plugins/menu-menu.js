@@ -5,12 +5,12 @@ import moment from 'moment-timezone'
 const emojicategoria = {
   info: 'ℹ️',
   main: '💠',
-  sicurezza: '🛡️' // Emoji per la nuova categoria
+  sicurezza: '🛡️'
 }
 
 let tags = {
   'main': '╭ *`SYSTEM MAIN`* ╯',
-  'sicurezza': '╭ *`SECURITY SYSTEM`* ╯', // Tag per il Menu Sicurezza
+  'sicurezza': '╭ *`SECURITY SYSTEM`* ╯',
   'info': '╭ *`DATABASE INFO`* ╯'
 }
 
@@ -77,18 +77,17 @@ let handler = async (m, { conn, usedPrefix: _p, __dirname }) => {
       totalreg: totalreg,
     };
 
-    let text = _text.replace(new RegExp(`%(${Object.keys(replace).sort((a, b) => b.length - a.length).join`|`})`, 'g'), (_, name) => '' + replace[name]);
+    let text = _text.replace(new RegExp(`%(${Object.keys(replace).sort((a, b) => b.length - a.length).join('|')})`, 'g'), (_, name) => '' + replace[name]);
 
     const msgID = m.id || m.key?.id;
     const deviceType = detectDevice(msgID);
 
     if (deviceType === 'ios') {
-      const randomMenus = getRandomMenus();
-      const buttons = randomMenus.map(menu => ({
-        buttonId: _p + menu.command,
-        buttonText: { displayText: menu.title },
-        type: 1
-      }));
+      const buttons = [
+        { buttonId: _p + 'attiva', buttonText: { displayText: '🛡️ Sicurezza' }, type: 1 },
+        { buttonId: _p + 'menugruppo', buttonText: { displayText: '👥 Gruppo' }, type: 1 },
+        { buttonId: _p + 'menuia', buttonText: { displayText: '🤖 IA' }, type: 1 }
+      ];
 
       await conn.sendMessage(m.chat, {
         image: { url: MENU_IMAGE_URL },
@@ -101,83 +100,39 @@ let handler = async (m, { conn, usedPrefix: _p, __dirname }) => {
     } else {
       const sections = [
         {
-          title: "🛡️ PROTEZIONE & SICUREZZA 🛡️",
+          title: "🛡️ SISTEMA DI PROTEZIONE",
           rows: [
-            { header: "『 🛡️ 』", title: "Menu Sicurezza", description: "Attiva/Disattiva moduli di protezione", id: _p + "attiva" }
+            { header: "『 🛡️ 』", title: "MENU SICUREZZA", description: "Configura Antilink, Antispam e Difese", id: _p + "attiva" }
           ]
         },
         {
-          title: "⭐ Menu Consigliati ⭐",
+          title: "📂 CATEGORIE OPERATIVE",
           rows: [
-            { header: "『 🤖 』", title: "Menu IA", description: "Intelligenza Artificiale", id: _p + "menuia" },
-            { header: "『 ⭐ 』", title: "Menu Premium", description: "Funzionalità Premium", id: _p + "menupremium" }
-          ]
-        },
-        {
-          title: "📂 Tutte le Categorie",
-          rows: [
-            { header: "『 🛠️ 』", title: "Menu Strumenti", description: "Utilità e tools", id: _p + "menustrumenti" },
-            { header: "『 💰 』", title: "Menu Euro", description: "Sistema economico", id: _p + "menueuro" },
-            { header: "『 🎮 』", title: "Menu Giochi", description: "Games e divertimento", id: _p + "menugiochi" },
-            { header: "『 👥 』", title: "Menu Gruppo", description: "Gestione gruppi", id: _p + "menugruppo" },
-            { header: "『 🔍 』", title: "Menu Ricerche", description: "Ricerca online", id: _p + "menuricerche" },
-            { header: "『 📥 』", title: "Menu Download", description: "Scarica contenuti", id: _p + "menudownload" },
-            { header: "『 👨‍💻 』", title: "Menu Creatore", description: "Comandi owner", id: _p + "menucreatore" }
+            { header: "『 🤖 』", title: "Menu IA", id: _p + "menuia" },
+            { header: "『 ⭐ 』", title: "Menu Premium", id: _p + "menupremium" },
+            { header: "『 🛠️ 』", title: "Menu Strumenti", id: _p + "menustrumenti" },
+            { header: "『 👥 』", title: "Menu Gruppo", id: _p + "menugruppo" },
+            { header: "『 📥 』", title: "Menu Download", id: _p + "menudownload" },
+            { header: "『 👨‍💻 』", title: "Menu Creatore", id: _p + "menucreatore" }
           ]
         }
       ];
 
-      await conn.sendList(
-        m.chat, 
-        "",
-        text.trim(),
-        "💠 APRI LISTA COMANDI",
-        MENU_IMAGE_URL,
-        sections,
-        m
-      );
+      await conn.sendList(m.chat, "", text.trim(), "💠 SELEZIONA MODULO", MENU_IMAGE_URL, sections, m);
     }
-
     await m.react('💠');
-
   } catch (e) {
-    console.error(e)
-    conn.reply(m.chat, '❌ Error: ' + e.message, m)
+    console.error(e);
   }
 };
 
 handler.help = ['menu'];
-handler.command = ['menu', 'menuall', 'help'];
+handler.command = ['menu', 'help'];
 export default handler;
 
-// --- UTILITIES ---
-
 function detectDevice(msgID) {
-  if (!msgID) return 'unknown';
-  if (/^[a-zA-Z]+-[a-fA-F0-9]+$/.test(msgID)) return 'bot';
-  if (msgID.startsWith('false_') || msgID.startsWith('true_')) return 'web';
-  if (msgID.startsWith('3EB0') && /^[A-Z0-9]+$/.test(msgID)) return 'web';
-  if (msgID.includes(':')) return 'desktop';
-  if (/^[A-F0-9]{32}$/i.test(msgID)) return 'android';
-  if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(msgID)) return 'ios';
-  if (/^[A-Z0-9]{20,25}$/i.test(msgID) && !msgID.startsWith('3EB0')) return 'ios';
-  return 'unknown';
-}
-
-function getRandomMenus() {
-  const allMenus = [
-    { title: "🛡️ Menu Sicurezza", command: "attiva" },
-    { title: "🤖 Menu IA", command: "menuia" },
-    { title: "⭐ Menu Premium", command: "menupremium" },
-    { title: "🛠️ Menu Strumenti", command: "menustrumenti" },
-    { title: "💰 Menu Euro", command: "menueuro" },
-    { title: "🎮 Menu Giochi", command: "menugiochi" },
-    { title: "👥 Menu Gruppo", command: "menugruppo" },
-    { title: "🔍 Menu Ricerche", command: "menuricerche" },
-    { title: "📥 Menu Download", command: "menudownload" },
-    { title: "👨‍💻 Menu Creatore", command: "menucreatore" }
-  ];
-  return allMenus.sort(() => 0.5 - Math.random()).slice(0, 5);
+    if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(msgID)) return 'ios';
+    return 'android';
 }
 
 function clockString(ms) {

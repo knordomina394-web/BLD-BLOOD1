@@ -3,11 +3,9 @@ import { join } from 'path'
 import { xpRange } from '../lib/levelling.js'
 import moment from 'moment-timezone'
 
-// --- CONFIGURAZIONE PERCORSO ---
-const nomeCartella = 'menu-giochi.jpeg'; // Questa è la tua cartella
-const nomeFile = 'immagine.jpg'; // <--- CAMBIA QUESTO con il nome reale del file dentro la cartella!
-
-const localImg = join(process.cwd(), nomeCartella, nomeFile); 
+// --- PERCORSO DIRETTO AL FILE ---
+// Il file si chiama 'menu-giochi.jpeg' ed è nella cartella principale del bot
+const localImg = join(process.cwd(), 'menu-giochi.jpeg'); 
 
 const defaultMenu = {
   before: `
@@ -35,11 +33,13 @@ let handler = async (m, { conn, usedPrefix: _p, __dirname }) => {
   try {
     await conn.sendPresenceUpdate('composing', m.chat)
     
+    // Dati Utente
     let user = global.db.data.users[m.sender] || {}
     let { exp = 0, level = 1, role = 'Utente', eris = 0, limit = 10 } = user
     let name = await conn.getName(m.sender)
     let uptime = clockString(process.uptime() * 1000)
 
+    // Filtro Plugin
     let help = Object.values(global.plugins)
       .filter(p => !p.disabled)
       .map(p => ({
@@ -55,6 +55,7 @@ let handler = async (m, { conn, usedPrefix: _p, __dirname }) => {
       groups[tag] = help.filter(menu => menu.tags && menu.tags.includes(tag) && menu.help[0])
     }
 
+    // Costruzione Testo
     let _text = [
       defaultMenu.before,
       ...Object.keys(tags).map(tag => {
@@ -80,7 +81,7 @@ let handler = async (m, { conn, usedPrefix: _p, __dirname }) => {
 
     let text = _text.replace(new RegExp(`%(${Object.keys(replace).sort((a, b) => b.length - a.length).join('|')})`, 'g'), (_, name) => '' + replace[name])
 
-    // Invio con l'immagine prelevata dalla sottocartella
+    // --- INVIO CON L'IMMAGINE SPECIFICA ---
     await conn.sendMessage(m.chat, {
       image: { url: localImg },
       caption: text.trim(),
@@ -91,7 +92,7 @@ let handler = async (m, { conn, usedPrefix: _p, __dirname }) => {
 
   } catch (e) {
     console.error(e)
-    conn.reply(m.chat, `❌ Errore: Assicurati che il file '${nomeFile}' sia dentro la cartella '${nomeCartella}'`, m)
+    conn.reply(m.chat, `❌ Errore: Il file 'menu-giochi.jpeg' non è stato trovato nella cartella principale.`, m)
   }
 }
 

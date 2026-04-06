@@ -10,7 +10,7 @@ let handler = async (m, { conn, usedPrefix: _p, command, args, isOwner, isAdmin 
 
   const dynamicContextInfo = {
     externalAdReply: {
-      title: "🛡️ 𝐒𝐘𝐒𝐓𝐄𝐌 𝐒𝐄𝐂𝐔𝐑𝐈𝐓𝐘 🛡️",
+      title: "🛡️ 𝐒𝐘𝐒𝐓𝐄𝐌 𝐒𝐄𝐂𝐔𝐑𝐈𝐓𝐘 𝐂𝐎𝐍𝐓𝐑𝐎𝐋 🛡️",
       body: "ᴘʀᴏᴛᴏᴄᴏʟʟɪ ᴅɪ ᴅɪꜰᴇsᴀ ᴀᴛᴛɪᴠɪ",
       mediaType: 1,
       renderLargerThumbnail: true,
@@ -19,95 +19,97 @@ let handler = async (m, { conn, usedPrefix: _p, command, args, isOwner, isAdmin 
     }
   }
 
-  // --- LISTA COMPLETA REINTEGRATA DAGLI SCREENSHOT ---
+  // --- CONFIGURAZIONE MODULI CON SPIEGAZIONI ---
   const securityFeatures = [
-    { key: 'antigore', name: '🚫 Antigore' },
-    { key: 'modoadmin', name: '🛡️ Soloadmin' },
-    { key: 'antivoip', name: '📞 Antivoip' },
-    { key: 'antilink', name: '🔗 Antilink' },
-    { key: 'antilinksocial', name: '🌐 Antilinksocial' },
-    { key: 'antitrava', name: '🛡️ Antitrava' },
-    { key: 'antinuke', name: '☢️ Antinuke' },
-    { key: 'antiviewonce', name: '👁️ Antiviewonce' },
-    { key: 'antispam', name: '🛑 Antispam' }
+    { key: 'antigore', name: '🚫 Antigore', desc: 'Blocca contenuti splatter/gore' },
+    { key: 'modoadmin', name: '🛡️ Soloadmin', desc: 'Solo gli admin usano il bot' },
+    { key: 'antivoip', name: '📞 Antivoip', desc: 'Rifiuta chiamate nel gruppo' },
+    { key: 'antilink', name: '🔗 Antilink', desc: 'Elimina link gruppi WhatsApp' },
+    { key: 'antilinksocial', name: '🌐 Antilinksocial', desc: 'Elimina link social (IG, TT, ecc)' },
+    { key: 'antitrava', name: '🧱 Antitrava', desc: 'Blocca crash/messaggi lunghi' },
+    { key: 'antinuke', name: '☢️ Antinuke', desc: 'Sicurezza avanzata del gruppo' },
+    { key: 'antiviewonce', name: '👁️ Antiviewonce', desc: 'Invia messaggi visualizza una volta' },
+    { key: 'antispam', name: '🛑 Antispam', desc: 'Blocca spam di comandi' }
   ]
 
   const automationFeatures = [
-    { key: 'ai', name: '🧠 IA' },
-    { key: 'vocali', name: '🎤 Siri' },
-    { key: 'reaction', name: '😎 Reazioni' },
-    { key: 'autolevelup', name: '⬆️ Autolivello' },
-    { key: 'welcome', name: '👋 Welcome' }
+    { key: 'ai', name: '🧠 IA', desc: 'Intelligenza artificiale attiva' },
+    { key: 'vocali', name: '🎤 Siri', desc: 'Risponde con audio ai messaggi' },
+    { key: 'reaction', name: '😎 Reazioni', desc: 'Reazioni automatiche ai messaggi' },
+    { key: 'autolevelup', name: '⬆️ Autolivello', desc: 'Messaggio di livello automatico' },
+    { key: 'welcome', name: '👋 Welcome', desc: 'Messaggio di benvenuto' }
   ]
 
-  // SE NON CI SONO ARGOMENTI: MOSTRA IL MENU
+  const ownerFeatures = [
+    { key: 'anticall', name: '📵 Antichiamate', desc: 'Blocca chiamate al bot (Global)' },
+    { key: 'antiprivate', name: '🔒 Antiprivato', desc: 'Blocca uso del bot in privato' },
+    { key: 'solocreatore', name: '👑 Solo Creatore', desc: 'Bot risponde solo all\'owner' }
+  ]
+
+  // --- GENERAZIONE MENU ---
   if (!args.length) {
     let text = `
-┎━━━━━━━━━━━━━━━━━━━┑
-┃   ✧  𝐁𝐋𝐃 - 𝐒𝐄𝐂𝐔𝐑𝐈𝐓𝐘  ✧   ┃
-┖━━━━━━━━━━━━━━━━━━━┙
-┌───────────────────┐
+┎━━━━━━━━━━━━━━━━━━━━┑
+┃   ✧  𝐁𝐋𝐃 - 𝐌𝐀𝐒𝐓𝐄𝐑 𝐂𝐎𝐍𝐓𝐑𝐎𝐋  ✧   ┃
+┖━━━━━━━━━━━━━━━━━━━━┙
+┌────────────────────┐
   👤 𝚄𝚜𝚎𝚛: ${userName}
-  🛡️ 𝚂𝚝𝚊𝚝𝚞𝚜: 𝙰𝚌𝚝𝚒𝚟𝚎
-└───────────────────┘
+  📡 𝚂𝚝𝚊𝚝𝚞𝚜: 𝙾𝚗𝚕𝚒𝚗𝚎
+└────────────────────┘
 
-*〘 ɪɴstruᴢɪᴏɴɪ ᴏᴘᴇʀᴀᴛɪᴠᴇ 〙*
-> Usa i seguenti comandi per configurare il sistema:
-*│ ➤* ${_p}*attiva* <funzione>
-*│ ➤* ${_p}*disattiva* <funzione>
+*〘 ɪɴsᴛʀᴜᴢɪᴏɴɪ ᴏᴘᴇʀᴀᴛɪᴠᴇ 〙*
+> Attiva o disattiva i moduli:
+*│ ➤* ${_p}*attiva* <nome>
+*│ ➤* ${_p}*disattiva* <nome>
 
-*┍━━━〔 🛡️ sɪᴄᴜʀᴇᴢᴢᴀ 〕━━━┑*
-${securityFeatures.map(f => `┇ ${f.name}  *➤* ${f.key}`).join('\n')}
-*┕━━━━━──ׄ──ׅ──ׄ──━━━━━┙*
+*┍━━━━━〔 🛡️ sɪᴄᴜʀᴇᴢᴢᴀ 〕━━━━━┑*
+${securityFeatures.map(f => `┇ ${f.name}\n┇ _${f.desc}_\n┇ ➤ *${f.key}*\n┇`).join('\n')}
+*┕━━━━━━━──ׄ──ׅ──ׄ──━━━━━━━┙*
 
-*┍━━━〔 🤖 ᴀᴜᴛᴏᴍᴀᴢɪᴏɴᴇ 〕━━━┑*
-${automationFeatures.map(f => `┇ ${f.name}  *➤* ${f.key}`).join('\n')}
-*┕━━━━━──ׄ──ׅ──ׄ──━━━━━┙*
-`
-    if (isOwner) {
-      text += `\n*┍━━━〔 👑 ᴏᴡɴᴇʀ ᴄᴏɴᴛʀᴏʟ 〕━━━┑*\n┇ ⭐ Antichiamate ➤ anticall\n┇ ⭐ Antiprivato ➤ antiPrivate\n┇ ⭐ Solo Creatore ➤ soloCreatore\n*┕━━━━━──ׄ──ׅ──ׄ──━━━━━┙*`
-    }
+*┍━━━━━〔 🤖 ᴀᴜᴛᴏᴍᴀᴢɪᴏɴᴇ 〕━━━━━┑*
+${automationFeatures.map(f => `┇ ${f.name}\n┇ _${f.desc}_\n┇ ➤ *${f.key}*\n┇`).join('\n')}
+*┕━━━━━━━──ׄ──ׅ──ׄ──━━━━━━━┙*
 
-    text += `\n\n_ʙʟᴅ-ʙᴏᴛ sᴇᴄᴜʀɪᴛʏ ɪɴᴛᴇʀꜰᴀᴄᴇ_`
+*┍━━━━━〔 👑 ᴏᴡɴᴇʀ ᴘᴀɴᴇʟ 〕━━━━━┑*
+${ownerFeatures.map(f => `┇ ${f.icon || '⭐'} ${f.name}\n┇ _${f.desc}_\n┇ ➤ *${f.key}*\n┇`).join('\n')}
+*┕━━━━━━━──ׄ──ׅ──ׄ──━━━━━━━┙*
+
+_ʙʟᴅ-ʙᴏᴛ sᴇᴄᴜʀɪᴛʏ ɪɴᴛᴇʀꜰᴀᴄᴇ_`
 
     await conn.sendMessage(m.chat, { text: text.trim(), contextInfo: dynamicContextInfo }, { quoted: m })
     return
   }
 
-  // LOGICA DI ATTIVAZIONE (SPOSTAMENTO SUL DATABASE)
+  // --- LOGICA DI ATTIVAZIONE ---
   let isEnable = !/disattiva|off|0/i.test(command)
   let type = args[0].toLowerCase()
   let status = isEnable ? 'ATTIVATO ✅' : 'DISATTIVATO ❌'
 
-  // Mappatura nomi input -> variabili database reali
   let dbKey = type
   if (type === 'antilink') dbKey = 'antiLink'
   if (type === 'antilinksocial') dbKey = 'antiLink2'
   if (type === 'antiviewonce') dbKey = 'antioneview'
-  if (type === 'antiprivato') dbKey = 'antiPrivate'
+  if (type === 'antiprivate') dbKey = 'antiPrivate'
+  if (type === 'solocreatore') dbKey = 'soloCreatore'
 
-  // Verifica permessi
   const isSecurity = securityFeatures.some(f => f.key.toLowerCase() === type)
   const isAuto = automationFeatures.some(f => f.key.toLowerCase() === type)
-  const isOwnerKey = ['anticall', 'antiprivate', 'solocreatore'].includes(type)
+  const isOwnerKey = ownerFeatures.some(f => f.key.toLowerCase() === type)
 
   if (isSecurity || isAuto) {
     if (!m.isGroup && !isOwner) return m.reply('❌ Solo nei gruppi')
     if (m.isGroup && !isAdmin && !isOwner) return m.reply('🛡️ Solo per Admin')
     chat[dbKey] = isEnable
   } else if (isOwnerKey) {
-    if (!isOwner) return m.reply('👑 Solo Owner')
+    if (!isOwner) return m.reply('👑 Solo per l\'Owner')
     bot[dbKey] = isEnable
   } else {
-    return m.reply('❓ Funzione non trovata. Controlla la lista.')
+    return m.reply('❓ Modulo non trovato.')
   }
 
   await m.react(isEnable ? '✅' : '❌')
   m.reply(`『 🛡️ 』 *SISTEMA AGGIORNATO*\n\nModulo: *${type.toUpperCase()}*\nStato: *${status}*`)
 }
 
-handler.help = ['attiva', 'disattiva']
-handler.tags = ['sicurezza']
 handler.command = ['attiva', 'disattiva', 'on', 'off', 'enable', 'disable']
-
 export default handler

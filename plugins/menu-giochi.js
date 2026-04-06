@@ -2,11 +2,9 @@ import { promises } from 'fs'
 import { join } from 'path'
 import { xpRange } from '../lib/levelling.js'
 import moment from 'moment-timezone'
-import os from 'os'
 
-// --- PERCORSO IMMAGINE ---
-// Punta alla cartella "menu-giochi.jpeg". 
-// Se dentro la cartella il file ha un nome specifico (es. "immagine.jpg"), aggiungilo dopo la virgola.
+// --- PERCORSO SPECIFICO PER MENU GIOCHI ---
+// Qui puntiamo alla cartella "menu-giochi.jpeg" nella root del bot
 const localImg = join(process.cwd(), 'menu-giochi.jpeg'); 
 
 const defaultMenu = {
@@ -29,28 +27,19 @@ const defaultMenu = {
   after: `_Usa %p [comando] per giocare_`,
 }
 
-let handler = async (m, { conn, usedPrefix: _p, __dirname, args, command }) => {
+let handler = async (m, { conn, usedPrefix: _p, __dirname }) => {
   let tags = { 'giochi': 'GIOCHI DISPONIBILI' }
 
   try {
     await conn.sendPresenceUpdate('composing', m.chat)
     
-    // ----------------- DATI BASE -----------------
-    let d = new Date(new Date().getTime() + 3600000)
-    let locale = 'it'
-    let week = d.toLocaleDateString(locale, { weekday: 'long' })
-    let date = d.toLocaleDateString(locale, { day: 'numeric', month: 'long', year: 'numeric' })
-    let uptime = clockString(process.uptime() * 1000)
-    let wib = moment.tz('Europe/Rome').format('HH:mm:ss')
-    
-    // ----------------- DATI UTENTE -----------------
+    // Dati Utente
     let user = global.db.data.users[m.sender] || {}
     let { exp = 0, level = 1, role = 'Utente', eris = 0, limit = 10 } = user
-    let { min, xp, max } = xpRange(level, global.multiplier || 1)
     let name = await conn.getName(m.sender)
-    let prems = user.premiumTime > 0 ? '💎 Premium' : '👤 Utente comune'
+    let uptime = clockString(process.uptime() * 1000)
 
-    // ----------------- PLUGIN HELP -----------------
+    // Plugin Filter
     let help = Object.values(global.plugins)
       .filter(p => !p.disabled)
       .map(p => ({
@@ -66,7 +55,7 @@ let handler = async (m, { conn, usedPrefix: _p, __dirname, args, command }) => {
       groups[tag] = help.filter(menu => menu.tags && menu.tags.includes(tag) && menu.help[0])
     }
 
-    // ----------------- COSTRUZIONE TESTO -----------------
+    // Costruzione Testo
     let _text = [
       defaultMenu.before,
       ...Object.keys(tags).map(tag => {
@@ -87,12 +76,12 @@ let handler = async (m, { conn, usedPrefix: _p, __dirname, args, command }) => {
     ].join('\n')
 
     let replace = {
-      '%': '%', p: _p, eris, name, level, limit, role, week, date, uptime, wib, prems
+      '%': '%', p: _p, eris, name, level, limit, role, uptime
     }
 
     let text = _text.replace(new RegExp(`%(${Object.keys(replace).sort((a, b) => b.length - a.length).join('|')})`, 'g'), (_, name) => '' + replace[name])
 
-    // ----------------- INVIO MENU CON IMMAGINE -----------------
+    // --- INVIO CON IMMAGINE DALLA CARTELLA GIOCHI ---
     await conn.sendMessage(m.chat, {
       image: { url: localImg },
       caption: text.trim(),
@@ -103,7 +92,7 @@ let handler = async (m, { conn, usedPrefix: _p, __dirname, args, command }) => {
 
   } catch (e) {
     console.error(e)
-    conn.reply(m.chat, '❌ Errore nel menu giochi:\n' + e.message, m)
+    conn.reply(m.chat, '❌ Errore Menu Giochi: ' + e.message, m)
   }
 }
 

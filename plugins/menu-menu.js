@@ -4,11 +4,13 @@ import moment from 'moment-timezone'
 
 const emojicategoria = {
   info: 'ℹ️',
-  main: '💠'
+  main: '💠',
+  sicurezza: '🛡️' // Emoji per la nuova categoria
 }
 
 let tags = {
   'main': '╭ *`SYSTEM MAIN`* ╯',
+  'sicurezza': '╭ *`SECURITY SYSTEM`* ╯', // Tag per il Menu Sicurezza
   'info': '╭ *`DATABASE INFO`* ╯'
 }
 
@@ -76,7 +78,7 @@ let handler = async (m, { conn, usedPrefix: _p, __dirname }) => {
     };
 
     let text = _text.replace(new RegExp(`%(${Object.keys(replace).sort((a, b) => b.length - a.length).join`|`})`, 'g'), (_, name) => '' + replace[name]);
-    
+
     const msgID = m.id || m.key?.id;
     const deviceType = detectDevice(msgID);
 
@@ -98,6 +100,12 @@ let handler = async (m, { conn, usedPrefix: _p, __dirname }) => {
 
     } else {
       const sections = [
+        {
+          title: "🛡️ PROTEZIONE & SICUREZZA 🛡️",
+          rows: [
+            { header: "『 🛡️ 』", title: "Menu Sicurezza", description: "Attiva/Disattiva moduli di protezione", id: _p + "attiva" }
+          ]
+        },
         {
           title: "⭐ Menu Consigliati ⭐",
           rows: [
@@ -158,6 +166,7 @@ function detectDevice(msgID) {
 
 function getRandomMenus() {
   const allMenus = [
+    { title: "🛡️ Menu Sicurezza", command: "attiva" },
     { title: "🤖 Menu IA", command: "menuia" },
     { title: "⭐ Menu Premium", command: "menupremium" },
     { title: "🛠️ Menu Strumenti", command: "menustrumenti" },

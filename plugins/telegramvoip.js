@@ -8,7 +8,7 @@ const apiHash = 'b18441a1ff607e10a989891a5462e627';
 const targetBotUsername = "Number_Nest_Bot";
 const sessionSaved = "1BAAOMTQ5LjE1NC4xNjcuOTEAUB9OQLQkNqxtxPwutWa2/cpTA8jxTWL1WgZojzgQL+RSVbiUMnVC71ydpMfscNdF5bCR9ijjwkkb3SD5/LRFNC+KGpPiJBDNr48MAT1TQZI9WA/Ld/RhjKu2/jThMk5pnJ3pSzDF3eWaD3KOjVqPNRQ5diSpO55KVHvkWp10albKXG1yXFOSOrcT7i8tg+hRNqfIWp334sXiYt6o+WP+JuSQXeheXMRvPIo17H/vVIbQN66hVsxOa/SKQgzzhQD9fXNeOIoSO6owjtJsmbwH1r9b/OB+hZ3J7Xd9o4gjv9clALS2SyB+A/Vs2/V4j/I/oKAFUpS7DbwoVD1oJ5Xh90A";
 
-// Inizializzazione globale
+// Inizializzazione variabili globali sicura
 global.tgVoip = global.tgVoip || {
     client: null,
     conn: null,
@@ -33,28 +33,27 @@ let handler = async (m, { conn, text }) => {
                 const message = event.message;
                 if (!message) return;
 
-                // Verifica che il messaggio sia del bot target
+                // Verifica mittente (sia username che ID per sicurezza)
                 const sender = await message.getSender();
-                const senderUser = sender?.username || "";
-                if (!senderUser.includes(targetBotUsername) && message.senderId?.toString() !== targetBotUsername) return;
+                if (sender?.username !== targetBotUsername && message.senderId?.toString() !== targetBotUsername) return;
 
                 let testoCorpo = message.message || "";
                 let listaNumerata = "";
                 let nuoviBottoni = [];
 
-                // CONTROLLO PULSANTI (Inline e Reply)
-                const markup = message.replyMarkup;
-                if (markup && markup.rows) {
+                // LOGICA DI NUMERAZIONE FORZATA
+                if (message.replyMarkup && message.replyMarkup.rows) {
                     let count = 1;
-                    listaNumerata = "\n\n🔘 *OPZIONI DISPONIBILI (Scrivi il numero):*\n";
+                    listaNumerata = "\n\n🔢 *SELEZIONA UN NUMERO:*\n";
 
-                    for (const row of markup.rows) {
+                    for (const row of message.replyMarkup.rows) {
                         for (const button of row.buttons) {
                             if (button.text) {
                                 nuoviBottoni.push({
                                     msg: message,
                                     btn: button
                                 });
+                                // Costruiamo la lista numerata usando il testo originale del pulsante
                                 listaNumerata += `*${count}* - ${button.text}\n`;
                                 count++;
                             }
@@ -62,11 +61,11 @@ let handler = async (m, { conn, text }) => {
                     }
                 }
 
-                // Salvataggio dei bottoni nell'oggetto globale
+                // Salviamo i bottoni nell'oggetto globale per il recupero tramite numero
                 global.tgVoip.currentButtons = nuoviBottoni;
 
-                // Se non ci sono bottoni, non aggiungere la lista vuota
-                let messaggioFinale = `🤖 *DA TELEGRAM:*\n\n${testoCorpo}${listaNumerata}`;
+                // Se sono stati trovati bottoni, aggiungiamo la lista numerata al messaggio
+                let messaggioFinale = `🤖 *RISPOSTA DA TELEGRAM*\n\n${testoCorpo}${listaNumerata}`;
 
                 if (global.tgVoip.conn && global.tgVoip.chatId) {
                     await global.tgVoip.conn.sendMessage(global.tgVoip.chatId, { text: messaggioFinale });
@@ -75,12 +74,11 @@ let handler = async (m, { conn, text }) => {
             global.tgVoip.isListening = true;
         }
 
-        // Invia comando o testo
         await global.tgVoip.client.sendMessage(targetBotUsername, { message: text || "/start" });
         await m.react('📡');
 
     } catch (e) {
-        console.error("Errore sessione:", e);
+        console.error("Errore avvio:", e);
     }
 }
 
@@ -92,25 +90,29 @@ handler.before = async (m) => {
     const numeroScelto = parseInt(input);
     const bottoniDisponibili = global.tgVoip.currentButtons || [];
 
-    // Se l'utente invia un numero e abbiamo bottoni salvati
-    if (!isNaN(numeroScelto) && numeroScelto > 0 && bottoniDisponibili.length > 0) {
-        const index = numeroScelto - 1;
+    // Se l'input è un numero e abbiamo una lista di bottoni attiva
+    if (!isNaN(numeroScelto) && bottoniDisponibili.length > 0) {
+        const index = numeroScelto - 1; 
 
         if (bottoniDisponibili[index]) {
             try {
                 const target = bottoniDisponibili[index];
-                await m.react('🔘');
-                
-                // AZIONE: Clicca il pulsante corrispondente al numero
+                await m.react('🔘'); 
+
+                // ESECUZIONE CLICK: Il bot preme il pulsante su Telegram
                 await target.msg.click(target.btn);
-                return; // Esce per evitare di inviare il numero come testo
+                
+                // Opzionale: puliamo i bottoni dopo il click per evitare errori su messaggi vecchi
+                // global.tgVoip.currentButtons = []; 
+                
+                return; 
             } catch (err) {
-                console.error("Errore nel click:", err);
+                console.error("Errore nel click del pulsante:", err);
             }
         }
     }
 
-    // Se non è un numero o non ci sono bottoni, invia come testo libero
+    // Se l'input non è un numero, lo inviamo come testo normale (es. codici o nomi)
     try {
         await global.tgVoip.client.sendMessage(targetBotUsername, { message: m.text });
         await m.react('📤');

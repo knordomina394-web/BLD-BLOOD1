@@ -8,44 +8,62 @@ let handler = async (m, { conn, usedPrefix, command, args, isOwner, isAdmin, isR
   let chat = global.db.data.chats[m.chat];
   let bot = global.db.data.settings[conn.user.jid];
 
-  // Configurazione ContextInfo
   const dynamicContextInfo = {
     externalAdReply: {
-      title: "🛡️ BLD-BOT SECURITY SYSTEM",
-      body: "Pannello di Controllo Difese",
+      title: "🛡️ 𝕭𝕷𝕺𝕺𝕯𝕭𝕺𝕿 𝕾𝕰𝕮𝖀𝕽𝕴𝕿𝖄",
+      body: "🛡️ Protocolli di Difesa Attivi",
       mediaType: 1,
-      thumbnailUrl: 'https://i.ibb.co/hJW7WwxV/varebot.jpg',
+      thumbnailUrl: 'https://files.catbox.moe/u8o020.jpg',
       sourceUrl: 'https://whatsapp.com/channel/0029Vajp6GvK0NBoP7WlR81G'
     }
   };
 
   const securityFeatures = [
-    { key: 'welcome', name: '👋 Welcome', desc: 'Benvenuto' },
-    { key: 'antispam', name: '🛑 Antispam', desc: 'Blocca messaggi ripetuti' },
-    { key: 'antiBot', name: '🤖 Antibot', desc: 'Espelle altri bot' },
-    { key: 'antiLink', name: '🔗 Antilink WA', desc: 'Blocca link gruppi' },
-    { key: 'antiLink2', name: '🌐 Antilink Social', desc: 'Blocca link social' },
-    { key: 'antinuke', name: '☢️ Antinuke', desc: 'Protezione Admin' },
-    { key: 'antitrava', name: '🛡️ Antitrava', desc: 'Blocca messaggi crash' },
-    { key: 'antiviewonce', name: '👁️ Antiviewonce', desc: 'Rivela foto temporanee' },
-    { key: 'antiporn', name: '🔞 Antiporno', desc: 'Filtro media NSFW' },
-    { key: 'detect', name: '📡 Detect', desc: 'Notifica cambi gruppo' }
+    { key: 'antispam', name: '🛑 Antispam' },
+    { key: 'antiBot', name: '🤖 Antibot' },
+    { key: 'antiLink', name: '🔗 Antilink WA' },
+    { key: 'antiLink2', name: '🌐 Antilink Social' },
+    { key: 'antinuke', name: '☢️ Antinuke' },
+    { key: 'antitrava', name: '🛡️ Antitrava' },
+    { key: 'antiviewonce', name: '👁️ Antiviewonce' },
+    { key: 'antiporn', name: '🔞 Antiporno' },
+    { key: 'detect', name: '📡 Detect' },
+    { key: 'welcome', name: '👋 Welcome' }
   ];
 
   const ownerFeatures = [
-    { key: 'antiprivato', name: '🔒 Antiprivato', desc: 'Blocca messaggi in DM' },
-    { key: 'anticall', name: '❌📞 Antichiamate', desc: 'Rifiuta chiamate' },
-    { key: 'soloCreatore', name: '👑 Solocreatore', desc: 'Solo owner mode' }
+    { key: 'antiprivato', name: '🔒 Antiprivato' },
+    { key: 'anticall', name: '❌📞 Antichiamate' },
+    { key: 'soloCreatore', name: '👑 Solocreatore' }
   ];
 
-  // SE NON CI SONO ARGOMENTI: Manda la lista comandi
+  // SE NON CI SONO ARGOMENTI: Manda l'introduzione e la lista testuale
   if (!args.length) {
+    let intro = `╭⭒─ׄ─⊱ *𝐌𝐄𝐍𝐔 𝐒𝐈𝐂𝐔𝐑𝐄𝐙𝐙𝐀* ⊰
+✦ 👤 *User:* ${userName}
+✧ 🛡️ *Stato:* Sistema Protetto
+✦ 🔒 *Moduli:* ${securityFeatures.length + (isOwner ? ownerFeatures.length : 0)}
+╰⭒─ׄ─ׅ─ׄ─⭒─ׄ─ׅ─ׄ─⭒─ׄ─ׅ─ׄ─⭒\n\n`
+
+    let listText = `*LISTA COMANDI DISPONIBILI:*\n`
+    securityFeatures.forEach(f => {
+      listText += `*│ ➤* 『🛡️』 ${usedPrefix}attiva ${f.key}\n`
+    })
+
+    if (isOwner) {
+      listText += `\n*CONTROLLO PROPRIETARIO:*\n`
+      ownerFeatures.forEach(f => {
+        listText += `*│ ➤* 『👑』 ${usedPrefix}attiva ${f.key}\n`
+      })
+    }
+
+    listText += `\n*╰⭒─ׄ─ׅ─ׄ─⭒─ׄ─ׅ─ׄ─⭒*\n> _Seleziona un comando sopra o usa il tasto "IMPOSTAZIONI" qui sotto._`
+
     let sections = [
       {
-        title: "🛡️ FUNZIONI DI SICUREZZA (ADMIN)",
+        title: "🛡️ MODULI GRUPPO",
         rows: securityFeatures.map(f => ({
           title: f.name,
-          description: f.desc,
           id: `${usedPrefix}attiva ${f.key}`
         }))
       }
@@ -53,10 +71,9 @@ let handler = async (m, { conn, usedPrefix, command, args, isOwner, isAdmin, isR
 
     if (isOwner) {
       sections.push({
-        title: "👑 SICUREZZA GLOBALE (OWNER)",
+        title: "👑 MODULI PROPRIETARIO",
         rows: ownerFeatures.map(f => ({
           title: f.name,
-          description: f.desc,
           id: `${usedPrefix}attiva ${f.key}`
         }))
       });
@@ -64,9 +81,9 @@ let handler = async (m, { conn, usedPrefix, command, args, isOwner, isAdmin, isR
 
     await conn.sendList(
         m.chat, 
-        "🛡️ PANNELLO SICUREZZA", 
-        `Ciao ${userName}, seleziona una funzione per attivarla/disattivarla nel sistema BloodBot.`, 
-        "IMPOSTAZIONI", 
+        "", 
+        intro + listText, 
+        "⚙️ IMPOSTAZIONI", 
         null, 
         sections, 
         m,
@@ -75,12 +92,12 @@ let handler = async (m, { conn, usedPrefix, command, args, isOwner, isAdmin, isR
     return;
   }
 
-  // LOGICA ATTIVA/DISATTIVA (se riceve argomenti come ".attiva antispam")
+  // --- LOGICA ATTIVA/DISATTIVA (rimane uguale per funzionare) ---
   let isEnable = !/disattiva|off|0/i.test(command);
   let type = args[0].toLowerCase();
   let status = '';
 
-  if (securityFeatures.some(f => f.key === type) || type === 'detect') {
+  if (securityFeatures.some(f => f.key === type) || type === 'detect' || type === 'welcome') {
     if (!m.isGroup && !isOwner) return m.reply('❌ Solo nei gruppi');
     if (m.isGroup && !isAdmin && !isOwner) return m.reply('🛡️ Solo per Admin');
     

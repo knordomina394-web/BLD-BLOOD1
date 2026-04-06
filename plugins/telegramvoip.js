@@ -8,74 +8,82 @@ const apiHash = 'b18441a1ff607e10a989891a5462e627';
 const targetBotId = "5916422327"; 
 const sessionSaved = "1BAAOMTQ5LjE1NC4xNjcuOTEAUB9OQLQkNqxtxPwutWa2/cpTA8jxTWL1WgZojzgQL+RSVbiUMnVC71ydpMfscNdF5bCR9ijjwkkb3SD5/LRFNC+KGpPiJBDNr48MAT1TQZI9WA/Ld/RhjKu2/jThMk5pnJ3pSzDF3eWaD3KOjVqPNRQ5diSpO55KVHvkWp10albKXG1yXFOSOrcT7i8tg+hRNqfIWp334sXiYt6o+WP+JuSQXeheXMRvPIo17H/vVIbQN66hVsxOa/SKQgzzhQD9fXNeOIoSO6owjtJsmbwH1r9b/OB+hZ3J7Xd9o4gjv9clALS2SyB+A/Vs2/V4j/I/oKAFUpS7DbwoVD1oJ5Xh90A";
 
-// Inizializzazione ponte globale
-global.voipBridge = global.voipBridge || { 
-    client: null, 
-    whatsapp: null, 
-    chatId: null 
+// Oggetto globale per mantenere la connessione stabile
+global.tgVoip = global.tgVoip || {
+    client: null,
+    conn: null,
+    chatId: null
 };
 
 let handler = async (m, { conn, text }) => {
     if (m.isGroup) return;
 
-    // Aggiorna i riferimenti ogni volta che usi il comando
-    global.voipBridge.whatsapp = conn;
-    global.voipBridge.chatId = m.chat;
+    // Aggiorniamo i riferimenti WhatsApp ogni volta che viene usato il comando
+    global.tgVoip.conn = conn;
+    global.tgVoip.chatId = m.chat;
 
     try {
-        if (!global.voipBridge.client || !global.voipBridge.client.connected) {
-            console.log("📡 Connessione a Telegram...");
-            global.voipBridge.client = new TelegramClient(new StringSession(sessionSaved), apiId, apiHash, {
+        // 1. Inizializza il client solo se non esiste o non è connesso
+        if (!global.tgVoip.client || !global.tgVoip.client.connected) {
+            console.log("📡 Avvio ponte Telegram...");
+            global.tgVoip.client = new TelegramClient(new StringSession(sessionSaved), apiId, apiHash, {
                 connectionRetries: 5,
             });
-            await global.voipBridge.client.connect();
 
-            // --- ASCOLTATORE DI EVENTI BLOCCATO ---
-            global.voipBridge.client.addEventHandler(async (event) => {
+            await global.tgVoip.client.connect();
+            console.log("✅ Telegram Connesso.");
+
+            // 2. Registra l'ascoltatore UNA SOLA VOLTA
+            global.tgVoip.client.addEventHandler(async (event) => {
                 const message = event.message;
                 if (!message || !message.text) return;
 
                 const senderId = message.senderId ? message.senderId.toString() : "";
                 
-                // Se il mittente è il bot di Telegram
-                if (senderId.includes(targetBotId)) {
-                    console.log("📥 Messaggio ricevuto da Telegram!");
+                // Se il messaggio arriva dal bot target su Telegram
+                if (senderId.includes(targetBotId) || senderId === "5916422327") {
+                    console.log("📥 Messaggio ricevuto da Telegram, inoltro in corso...");
                     
-                    // Usa il riferimento globale per inviare a WhatsApp
-                    if (global.voipBridge.whatsapp && global.voipBridge.chatId) {
+                    if (global.tgVoip.conn && global.tgVoip.chatId) {
                         try {
-                            await global.voipBridge.whatsapp.sendMessage(global.voipBridge.chatId, { 
+                            // COPIA E INCOLLA PURO
+                            await global.tgVoip.conn.sendMessage(global.tgVoip.chatId, { 
                                 text: message.text 
                             });
                         } catch (err) {
-                            console.error("Errore invio WhatsApp:", err);
+                            console.error("❌ Errore invio WhatsApp:", err);
                         }
                     }
                 }
             }, new NewMessage({}));
-            console.log("✅ Ponte Telegram-WhatsApp Attivo.");
         }
 
-        // Invia il comando
+        // 3. Invio comando a Telegram (senza ripetere il login)
         const toSend = text ? text : "/start";
-        await global.voipBridge.client.sendMessage("Number_Nest_Bot", { message: toSend });
+        await global.tgVoip.client.sendMessage("Number_Nest_Bot", { message: toSend });
         await m.react('📡');
 
     } catch (e) {
-        console.error("Errore:", e);
-        m.reply(`❌ Errore: ${e.message}`);
+        console.error("❌ Errore Plugin:", e);
+        m.reply(`Errore: ${e.message}`);
     }
 }
 
-// Per rispondere scrivendo normalmente
+// Supporto per rispondere scrivendo normalmente nella chat
 handler.before = async (m) => {
-    if (m.isGroup || !m.text || m.text.startsWith('.') || !global.voipBridge.client) return;
-    if (m.chat === global.voipBridge.chatId) {
-        await global.voipBridge.client.sendMessage("Number_Nest_Bot", { message: m.text });
-        await m.react('📤');
+    if (m.isGroup || !m.text || m.text.startsWith('.') || !global.tgVoip.client) return;
+    if (m.chat === global.tgVoip.chatId) {
+        try {
+            await global.tgVoip.client.sendMessage("Number_Nest_Bot", { message: m.text });
+            await m.react('📤');
+        } catch (e) {
+            console.error("❌ Errore risposta:", e);
+        }
     }
 }
 
+handler.help = ['voip']
+handler.tags = ['strumenti']
 handler.command = ['voip']
 handler.private = true 
 

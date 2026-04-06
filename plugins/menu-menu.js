@@ -6,13 +6,13 @@ const emojicategoria = {
   info: 'ℹ️',
   main: '💠',
   sicurezza: '🛡️',
-  giochi: '🎮' // Aggiunta emoji giochi
+  giochi: '🎮'
 }
 
 let tags = {
   'main': '╭ *`SYSTEM MAIN`* ╯',
   'sicurezza': '╭ *`SECURITY SYSTEM`* ╯',
-  'giochi': '╭ *`GAMES & FUN`* ╯', // Aggiunto tag giochi
+  'giochi': '╭ *`GAMES & FUN`* ╯',
   'info': '╭ *`DATABASE INFO`* ╯'
 }
 
@@ -87,7 +87,7 @@ let handler = async (m, { conn, usedPrefix: _p, __dirname }) => {
     if (deviceType === 'ios') {
       const buttons = [
         { buttonId: _p + 'attiva', buttonText: { displayText: '🛡️ Sicurezza' }, type: 1 },
-        { buttonId: _p + 'menugiochi', buttonText: { displayText: '🎮 Giochi' }, type: 1 }, // Pulsante Giochi
+        { buttonId: _p + 'menugiochi', buttonText: { displayText: '🎮 Giochi' }, type: 1 },
         { buttonId: _p + 'menugruppo', buttonText: { displayText: '👥 Gruppo' }, type: 1 }
       ];
 
@@ -108,9 +108,14 @@ let handler = async (m, { conn, usedPrefix: _p, __dirname }) => {
           ]
         },
         {
+          title: "🎮 AREA DIVERTIMENTO",
+          rows: [
+            { header: "『 🎮 』", title: "MENU GIOCHI", description: "Sfide, Divertimento e Classifiche", id: _p + "menugiochi" }
+          ]
+        },
+        {
           title: "📂 CATEGORIE OPERATIVE",
           rows: [
-            { header: "『 🎮 』", title: "Menu Giochi", description: "Sfide, Divertimento e Classifiche", id: _p + "menugiochi" }, // Riga Giochi
             { header: "『 🤖 』", title: "Menu IA", id: _p + "menuia" },
             { header: "『 ⭐ 』", title: "Menu Premium", id: _p + "menupremium" },
             { header: "『 🛠️ 』", title: "Menu Strumenti", id: _p + "menustrumenti" },

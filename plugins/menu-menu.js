@@ -1,6 +1,6 @@
 import { promises } from 'fs'
 import { join } from 'path'
-import moment from 'moment-timezone'
+import fetch from 'node-fetch'
 
 const emojicategoria = {
   info: 'ℹ️',
@@ -34,6 +34,19 @@ const defaultMenu = {
 }
 
 const MENU_IMAGE_URL = 'https://i.ibb.co/hJW7WwxV/varebot.jpg';
+
+// Funzione per rilevare il dispositivo
+function detectDevice(msgID) {
+  if (!msgID) return 'unknown'; 
+  if (/^[a-zA-Z]+-[a-fA-F0-9]+$/.test(msgID)) return 'bot';
+  if (msgID.startsWith('false_') || msgID.startsWith('true_')) return 'web';
+  if (msgID.startsWith('3EB0') && /^[A-Z0-9]+$/.test(msgID)) return 'web';
+  if (msgID.includes(':')) return 'desktop';
+  if (/^[A-F0-9]{32}$/i.test(msgID)) return 'android';
+  if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(msgID)) return 'ios';
+  if (/^[A-Z0-9]{20,25}$/i.test(msgID) && !msgID.startsWith('3EB0')) return 'ios';
+  return 'unknown';
+}
 
 let handler = async (m, { conn, usedPrefix: _p, __dirname }) => {
   try {
@@ -69,52 +82,52 @@ let handler = async (m, { conn, usedPrefix: _p, __dirname }) => {
       defaultMenu.after
     ].join('\n');
 
-    let replace = {
-      '%': '%',
-      p: _p,
-      uptime: uptime,
-      name: name,
-      totalreg: totalreg,
-    };
-
+    let replace = { '%': '%', p: _p, uptime, name, totalreg };
     let text = _text.replace(new RegExp(`%(${Object.keys(replace).sort((a, b) => b.length - a.length).join('|')})`, 'g'), (_, name) => '' + replace[name]);
 
-    // --- DEFINIZIONE DELLE 8 SEZIONI (LISTA UNIFICATA) ---
-    const sections = [
-      {
-        title: "🛡️ SISTEMA DI SICUREZZA",
-        rows: [
-          { header: "『 🛡️ 』", title: "MENU SICUREZZA", description: "Configura Antilink e Difese", id: _p + "attiva" }
-        ]
-      },
-      {
-        title: "🎮 AREA DIVERTIMENTO",
-        rows: [
-          { header: "『 🎮 』", title: "MENU GIOCHI", description: "Sfide e Classifiche", id: _p + "menugiochi" }
-        ]
-      },
-      {
-        title: "📂 TUTTI I MODULI OPERATIVI",
-        rows: [
-          { header: "『 🤖 』", title: "Menu IA", description: "Intelligenza Artificiale", id: _p + "menuia" },
-          { header: "『 👥 』", title: "Menu Gruppo", description: "Gestione membri", id: _p + "menugruppo" },
-          { header: "『 📥 』", title: "Menu Download", description: "Scarica video/musica", id: _p + "menudownload" },
-          { header: "『 🛠️ 』", title: "Menu Strumenti", description: "Utility varie", id: _p + "menustrumenti" },
-          { header: "『 ⭐ 』", title: "Menu Premium", description: "Funzioni esclusive", id: _p + "menupremium" },
-          { header: "『 👨‍💻 』", title: "Menu Creatore", description: "Comandi Owner", id: _p + "menucreatore" }
-        ]
-      }
+    const msgID = m.id || m.key?.id;
+    const deviceType = detectDevice(msgID);
+
+    // Definizione di tutti i tasti (8 Sezioni)
+    const allMenuRows = [
+      { id: _p + "attiva", title: "🛡️ Menu Sicurezza", description: "Antilink e Protezioni" },
+      { id: _p + "menugiochi", title: "🎮 Menu Giochi", description: "Divertimento e Sfide" },
+      { id: _p + "menuia", title: "🤖 Menu IA", description: "Intelligenza Artificiale" },
+      { id: _p + "menugruppo", title: "👥 Menu Gruppo", description: "Gestione del Gruppo" },
+      { id: _p + "menudownload", title: "📥 Menu Download", description: "Social Downloader" },
+      { id: _p + "menustrumenti", title: "🛠️ Menu Strumenti", description: "Utility e Tools" },
+      { id: _p + "menupremium", title: "⭐ Menu Premium", description: "Funzioni Esclusive" },
+      { id: _p + "menucreatore", title: "👨‍💻 Menu Creatore", description: "Pannello Owner" }
     ];
 
-    // MESSAGGIO LISTA (Protocollo compatibile iPhone/Android)
-    await conn.sendList(m.chat, 
-      "💠 BLD-BOT SYSTEM", // Titolo piccolo
-      text.trim(),        // Testo principale (HUD)
-      "💠 SELEZIONA MODULO", // Testo sul tasto
-      MENU_IMAGE_URL,     // Immagine
-      sections,           // Le 8 voci
-      m
-    );
+    if (deviceType === 'ios') {
+      // Per iPhone usiamo i Buttons fisici (Massimo 5 per stabilità)
+      const buttons = allMenuRows.slice(0, 5).map(menu => ({
+        buttonId: menu.id,
+        buttonText: { displayText: menu.title },
+        type: 1
+      }));
+
+      await conn.sendMessage(m.chat, {
+        image: { url: MENU_IMAGE_URL },
+        caption: text.trim(),
+        footer: "B L D - B O T  S Y S T E M",
+        buttons: buttons,
+        headerType: 4,
+        viewOnce: true
+      }, { quoted: m });
+
+    } else {
+      // Per Android/Web usiamo la lista interattiva completa
+      await conn.sendList(m.chat, 
+        "💠 BLD-BOT SYSTEM", 
+        text.trim(), 
+        "💠 SELEZIONA MODULO", 
+        MENU_IMAGE_URL, 
+        [{ title: "TUTTI I MODULI OPERATIVI", rows: allMenuRows }], 
+        m
+      );
+    }
 
     await m.react('💠');
 

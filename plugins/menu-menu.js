@@ -1,18 +1,16 @@
-import { promises } from 'fs'
+limport { promises } from 'fs'
 import { join } from 'path'
 import moment from 'moment-timezone'
 
 const emojicategoria = {
   info: 'ℹ️',
   main: '💠',
-  sicurezza: '🛡️',
-  giochi: '🎮'
+  sicurezza: '🛡️'
 }
 
 let tags = {
   'main': '╭ *`SYSTEM MAIN`* ╯',
   'sicurezza': '╭ *`SECURITY SYSTEM`* ╯',
-  'giochi': '╭ *`GAMES & FUN`* ╯',
   'info': '╭ *`DATABASE INFO`* ╯'
 }
 
@@ -117,8 +115,6 @@ let handler = async (m, { conn, usedPrefix: _p, __dirname }) => {
           title: "📂 CATEGORIE OPERATIVE",
           rows: [
             { header: "『 🤖 』", title: "Menu IA", id: _p + "menuia" },
-            { header: "『 ⭐ 』", title: "Menu Premium", id: _p + "menupremium" },
-            { header: "『 🛠️ 』", title: "Menu Strumenti", id: _p + "menustrumenti" },
             { header: "『 👥 』", title: "Menu Gruppo", id: _p + "menugruppo" },
             { header: "『 📥 』", title: "Menu Download", id: _p + "menudownload" },
             { header: "『 👨‍💻 』", title: "Menu Creatore", id: _p + "menucreatore" }

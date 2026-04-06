@@ -522,7 +522,7 @@ if (m.message?.protocolMessage?.type === 'MESSAGE_EDIT') {
 
                 if (!isAccept) continue
 
-                // MODIFICA: Blocca moderatori bot dal dare/togliere admin reale
+                // BLOCCO PER MODERATORI: Non possono dare o togliere admin reale
                 const blockAdminCmds = ['promuovi', 'retrocedi', 'promote', 'demote']
                 if (blockAdminCmds.includes(command) && isMod && !isRealAdmin && !isOwner) {
                     await this.reply(m.chat, `🚫 Mbàre, sei un moderatore del bot ma non hai il potere di gestire gli amministratori del gruppo.`, m)
@@ -786,7 +786,7 @@ Mbare, prima ti devi registrare.
 
 Esempio:
 .reg ${nome} ${etarandom}`,
-        restrict: '🚫 𝗭𝗢𝗡𝗔 𝗖𝗛𝗜𝗨𝗦𝗔\nFunzione momentaneamente bloccata.',
+        restrict: '🚫 𝗭𝗢𝗡𝗔 𝗖𝗛𝐈𝐔𝗦𝗔\nFunzione momentaneamente bloccata.',
         disabled: '🚫 𝗢𝗥𝗗𝗜𝗡𝗘 𝗦𝗢𝗦𝗣𝗘𝗦𝗢\nQuesto comando è stato disattivato.'
     }[type]
     if (msg) {

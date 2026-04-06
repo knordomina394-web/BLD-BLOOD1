@@ -1,25 +1,18 @@
 import fetch from 'node-fetch'
+import { join } from 'path'
 
 let handler = async (m, { conn, usedPrefix: _p, command, args, isOwner, isAdmin }) => {
   const userName = m.pushName || 'Utente'
   
+  // --- PERCORSO IMMAGINE LOCALE ---
+  const localImg = join(process.cwd(), 'menu-sicurezza.jpeg')
+
   global.db.data.chats[m.chat] = global.db.data.chats[m.chat] || {}
   global.db.data.settings[conn.user.jid] = global.db.data.settings[conn.user.jid] || {}
   let chat = global.db.data.chats[m.chat]
   let bot = global.db.data.settings[conn.user.jid]
 
-  const dynamicContextInfo = {
-    externalAdReply: {
-      title: "🛡️ 𝐒𝐘𝐒𝐓𝐄𝐌 𝐒𝐄𝐂𝐔𝐑𝐈𝐓𝐘 𝐂𝐎𝐍𝐓𝐑𝐎𝐋 🛡️",
-      body: "ᴘʀᴏᴛᴏᴄᴏʟʟɪ ᴅɪ ᴅɪꜰᴇsᴀ ᴀᴛᴛɪᴠɪ",
-      mediaType: 1,
-      renderLargerThumbnail: true,
-      thumbnailUrl: 'https://files.catbox.moe/u8o020.jpg',
-      sourceUrl: 'https://whatsapp.com/channel/0029Vajp6GvK0NBoP7WlR81G'
-    }
-  }
-
-  // --- CONFIGURAZIONE MODULI CON SPIEGAZIONI ---
+  // --- CONFIGURAZIONE MODULI ---
   const securityFeatures = [
     { key: 'antigore', name: '🚫 Antigore', desc: 'Blocca contenuti splatter/gore' },
     { key: 'modoadmin', name: '🛡️ Soloadmin', desc: 'Solo gli admin usano il bot' },
@@ -47,7 +40,7 @@ let handler = async (m, { conn, usedPrefix: _p, command, args, isOwner, isAdmin 
   ]
 
   // --- GENERAZIONE MENU ---
-  if (!args.length) {
+  if (!args.length || /menu|help/i.test(args[0])) {
     let text = `
 ┎━━━━━━━━━━━━━━━━━━━━┑
 ┃   ✧  𝐁𝐋𝐃 - 𝐌𝐀𝐒𝐓𝐄𝐑 𝐂𝐎𝐍𝐓𝐑𝐎𝐋  ✧   ┃
@@ -70,13 +63,20 @@ ${securityFeatures.map(f => `┇ ${f.name}\n┇ _${f.desc}_\n┇ ➤ *${f.key}*\
 ${automationFeatures.map(f => `┇ ${f.name}\n┇ _${f.desc}_\n┇ ➤ *${f.key}*\n┇`).join('\n')}
 *┕━━━━━━━──ׄ──ׅ──ׄ──━━━━━━━┙*
 
-*┍━━━━━〔 👑 ᴏᴡɴᴇʀ ᴘᴀɴᴇʟ 〕━━━━━┑*
-${ownerFeatures.map(f => `┇ ${f.icon || '⭐'} ${f.name}\n┇ _${f.desc}_\n┇ ➤ *${f.key}*\n┇`).join('\n')}
-*┕━━━━━━━──ׄ──ׅ──ׄ──━━━━━━━┙*
-
 _ʙʟᴅ-ʙᴏᴛ sᴇᴄᴜʀɪᴛʏ ɪɴᴛᴇʀꜰᴀᴄᴇ_`
 
-    await conn.sendMessage(m.chat, { text: text.trim(), contextInfo: dynamicContextInfo }, { quoted: m })
+    // Invio con immagine locale
+    await conn.sendMessage(m.chat, { 
+      image: { url: localImg }, 
+      caption: text.trim(),
+      contextInfo: {
+        mentionedJid: [m.sender],
+        forwardedNewsletterMessageInfo: {
+          newsletterJid: '120363232743845068@newsletter',
+          newsletterName: "🛡️ 𝐒𝐘𝐒𝐓𝐄𝐌 𝐒𝐄𝐂𝐔𝐑𝐈𝐓𝐘 𝐂𝐎𝐍𝐓𝐑𝐎𝐋 🛡️"
+        }
+      }
+    }, { quoted: m })
     return
   }
 

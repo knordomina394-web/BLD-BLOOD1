@@ -1,4 +1,3 @@
-
 import { downloadContentFromMessage } from '@realvare/based'
 import crypto from 'crypto'
 import fetch from 'node-fetch'
@@ -15,6 +14,7 @@ handler.before = async function (m, { conn, isAdmin, isOwner }) {
 
     let user = global.db.data.users[m.sender] || (global.db.data.users[m.sender] = { warn: 0 })
     if (!global.db.data.nsfwCache) global.db.data.nsfwCache = {}
+    
     const isMedia = m.message.imageMessage ||
                     m.message.videoMessage ||
                     m.message.stickerMessage
@@ -39,9 +39,10 @@ handler.before = async function (m, { conn, isAdmin, isOwner }) {
             for await (const chunk of stream) {
                 mediaBuffer = Buffer.concat([mediaBuffer, chunk]);
             }
+            
             const fileHash = crypto.createHash('md5').update(mediaBuffer).digest('hex')
             if (global.db.data.nsfwCache[fileHash] === true) {
-                return await punishUser(conn, m, user, "File già rilevato come Gore in precedenza")
+                return await punishUser(conn, m, user, "File già blacklistato come Gore")
             }
             if (global.db.data.nsfwCache[fileHash] === false) {
                 return true 
@@ -105,20 +106,24 @@ handler.before = async function (m, { conn, isAdmin, isOwner }) {
     }
     return true
 }
+
 async function punishUser(conn, m, user, reason) {
     user.warn += 1
     const senderTag = m.sender.split('@')[0]
     try { await conn.sendMessage(m.chat, { delete: m.key }) } catch (e) {}
 
+    const header = `⋆｡˚『 ╭ \`SISTEMA ANTIGORE\` ╯ 』˚｡⋆`
+    const footer = `╰⭒─ׄ─ׅ─ׄ─⭒─ׄ─ׅ─ׄ─⭒─ׄ─ׅ─ׄ─⭒`
+
     if (user.warn < 3) {
         await conn.sendMessage(m.chat, {
-            text: `*@${senderTag}* 🚫 ${reason}!\n\n⚠️ Avvertimento *${user.warn}/3*\n> \`bloodbot\``,
+            text: `${header}\n\n🚨 *ATTENZIONE* @${senderTag}\n\n┃ ⛔ \`Violazione:\` *${reason}*\n┃ ⚠️ \`Warn:\` *${user.warn}/3*\n┃ 🚫 \`Azione:\` Messaggio rimosso\n\n${footer}`,
             mentions: [m.sender]
         })
     } else {
         user.warn = 0
         await conn.sendMessage(m.chat, {
-            text: `*@${senderTag}* rimosso dal gruppo per contenuti Gore ripetuti 👋\n> \`bloodbot\``,
+            text: `${header}\n\n🚨 *TERMINAZIONE* @${senderTag}\n\n┃ ⛔ \`Violazione:\` Gore ripetuto\n┃ 💀 \`Sanzione:\` *ESPULSIONE*\n\n${footer}`,
             mentions: [m.sender]
         })
         await conn.groupParticipantsUpdate(m.chat, [m.sender], 'remove')

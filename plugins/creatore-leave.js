@@ -1,26 +1,42 @@
 let handler = async (m, { conn, text, command }) => {
-  const isOwner = [...global.owner.map(([number]) => number), ...global.mods].map(v => v.replace(/[^0-9]/g, '') + '@s.whatsapp.net').includes(m.sender)
+  // Verifica permessi: Solo Owner
+  const isOwner = [...global.owner.map(([number]) => number), ...global.mods]
+    .map(v => v.replace(/[^0-9]/g, '') + '@s.whatsapp.net')
+    .includes(m.sender)
+
   if (!isOwner) {
-    if (!m.isAdmin) {
-      await m.reply('⚠️ Questo comando può essere usato solo da admin e owner del gruppo')
-      return
-    }
+    return await conn.reply(m.chat, `*｢ ⚠️ OWNER ONLY ｣*\n\nQuesto comando può essere eseguito solo dal mio *Creatore*.`, m)
   }
 
-  let id = text ? text : m.chat  
-  let chat = global.db.data.chats[m.chat]
+  let id = text ? text : m.chat
   
-  await conn.reply(id, `令 *bloodbot* sta abbandonando il gruppo, bella 👋`) 
-  await conn.groupLeave(id)
-  
+  // Design Estetico BLD-BLOOD
+  let leaveMessage = `
+┏━━━━━━━〔 🩸 *BLD-BLOOD* 〕━━━━━━━┓
+┃
+┃ 👋 *ADDIO GRUPPO*
+┃
+┃ Il bot sta abbandonando questa chat.
+┃ È stato un onore servire qui.
+┃
+┃ 🛑 *Status:* Disconnessione...
+┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛`.trim()
+
   try {
+    await conn.reply(id, leaveMessage)
+    await conn.groupLeave(id)
   } catch (e) {
     console.error('Errore durante l\'uscita:', e)
-    await m.reply('Si è verificato un errore durante l\'uscita dal gruppo')
+    await m.reply('❌ Errore critico durante la procedura di uscita.')
   }
 }
 
-handler.command = /^(esci|leavegc|leave|voltati)$/i
-handler.group = true
-handler.owner = true
+handler.help = ['out']
+handler.tags = ['owner']
+handler.command = /^(esci|leavegc|leave|voltati|out)$/i
+
+handler.group = true 
+handler.owner = true // Proprietà attivata per sicurezza extra
+
 export default handler

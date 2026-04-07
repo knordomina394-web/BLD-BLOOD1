@@ -1,10 +1,8 @@
 // plug-in di blood - Gestione Moderatori (Finti Admin)
 let handler = async (m, { conn, text, command, usedPrefix, isOwner }) => {
-    // Controllo permessi: solo l'Owner/Creatore può gestire i moderatori
     if (!isOwner) return m.reply("❌ Questo comando è riservato al proprietario del bot.")
 
     let chatId = m.chat
-    // Inizializza la struttura nel database se non esiste
     if (!global.db.data.chats[chatId]) global.db.data.chats[chatId] = {}
     if (!global.db.data.chats[chatId].moderatori) global.db.data.chats[chatId].moderatori = []
 
@@ -13,49 +11,47 @@ let handler = async (m, { conn, text, command, usedPrefix, isOwner }) => {
     // --- COMANDO .ADDMOD ---
     if (command === 'addmod') {
         let who = m.mentionedJid && m.mentionedJid[0] ? m.mentionedJid[0] : m.quoted ? m.quoted.sender : text ? text.replace(/[^0-9]/g, '') + '@s.whatsapp.net' : null
-        
-        if (!who) return m.reply(`Tagga qualcuno o rispondi a un messaggio per aggiungerlo come moderatore.`)
-        if (mods.includes(who)) return m.reply("⚠️ Questo utente è già un moderatore.")
-
+        if (!who) return m.reply(`Tagga qualcuno per aggiungerlo come moderatore.`)
+        if (mods.includes(who)) return m.reply("⚠️ Utente già presente.")
         mods.push(who)
-        return m.reply(`✅ @${who.split('@')[0]} è stato aggiunto!\nOra il bot lo tratterà come un Admin del gruppo.`, null, { mentions: [who] })
+        return m.reply(`✅ @${who.split('@')[0]} aggiunto ai moderatori!`, null, { mentions: [who] })
     }
 
     // --- COMANDO .DELMOD ---
     if (command === 'delmod') {
         let who = m.mentionedJid && m.mentionedJid[0] ? m.mentionedJid[0] : m.quoted ? m.quoted.sender : text ? text.replace(/[^0-9]/g, '') + '@s.whatsapp.net' : null
-        
-        if (!who) return m.reply(`Tagga qualcuno o rispondi a un messaggio per rimuoverlo.`)
-        if (!mods.includes(who)) return m.reply("⚠️ Questo utente non è nella lista moderatori.")
-
+        if (!who) return m.reply(`Tagga qualcuno per rimuoverlo.`)
         global.db.data.chats[chatId].moderatori = mods.filter(jid => jid !== who)
         return m.reply(`🗑️ Privilegi rimossi per @${who.split('@')[0]}.`, null, { mentions: [who] })
     }
 
-    // --- COMANDO .LISTANERA (Mostra i mod) ---
+    // --- COMANDO .LISTANERA ---
     if (command === 'listanera') {
-        if (mods.length === 0) return m.reply("📋 Non ci sono moderatori registrati in questo gruppo.")
-
-        let lista = `📋 *LISTA MODERATORI (ADMIN BOT)*\n`
-        lista += `──────────────────\n\n`
-        mods.forEach((jid, i) => {
-            lista += `${i + 1}. @${jid.split('@')[0]}\n`
-        })
-        lista += `\n──────────────────\n_Questi utenti possono usare i comandi admin._`
-
+        if (mods.length === 0) return m.reply("📋 Nessun moderatore registrato.")
+        let lista = `📋 *LISTA MODERATORI*\n\n`
+        mods.forEach((jid, i) => { lista += `${i + 1}. @${jid.split('@')[0]}\n` })
         return conn.sendMessage(chatId, { text: lista, mentions: mods }, { quoted: m })
     }
 }
 
-// Questa funzione "inganna" il sistema di permessi globale
-handler.before = async function (m) {
+// --- LOGICA DI FILTRO ---
+handler.before = async function (m, { isOwner }) {
     if (!m.isGroup || !global.db.data.chats[m.chat]?.moderatori) return
-    
+
     let mods = global.db.data.chats[m.chat].moderatori
-    
-    // Se l'utente che scrive è nella lista mod, forziamo il flag isAdmin
-    if (mods.includes(m.sender)) {
+    let isMod = mods.includes(m.sender)
+
+    if (isMod) {
+        // 1. Diamo i permessi per i comandi admin generici
         m.isAdmin = true 
+
+        // 2. BLOCCO DI SICUREZZA: Se il comando cerca di modificare i ruoli
+        // Aggiungi qui i nomi dei comandi che danno/tolgono admin (es: promote, demote, admin, unadmin)
+        let comando = m.text.toLowerCase()
+        if (comando.startsWith('.') && /^(promote|demote|admin|unadmin|dareadmin|togliereadmin)/i.test(comando.slice(1))) {
+            m.isAdmin = false // Revociamo temporaneamente lo status per questo messaggio
+            return m.reply("🚫 *Accesso Negato*\nCome Moderatore non hai il permesso di gestire i ruoli degli utenti (Promote/Demote).")
+        }
     }
 }
 

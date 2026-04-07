@@ -1,6 +1,6 @@
 let handler = async (m, { conn, text, command }) => {
     const ownerJids = global.owner.map(o => o[0] + '@s.whatsapp.net');
-    const botId = conn.user.id.includes(':') ? conn.user.id.split(':')[0] + '@s.whatsapp.net' : conn.user.id;
+    const botId = conn.user.id.split(':')[0] + '@s.whatsapp.net';
 
     // 1. RECUPERO LISTA GRUPPI
     let getGroups = await conn.groupFetchAllParticipating();
@@ -8,9 +8,9 @@ let handler = async (m, { conn, text, command }) => {
     
     if (groups.length === 0) return m.reply("❌ Il bot non è in alcun gruppo.");
 
-    // 2. MOSTRA LISTA SE MANCA IL TESTO
+    // 2. MOSTRA LISTA
     if (!text) {
-        let txt = "😈 *Scegli l'obiettivo da flettere:*\n\n";
+        let txt = "😈 *LISTA TARGET DISPONIBILI:*\n\n";
         groups.forEach((g, i) => {
             txt += `*${i + 1}.* ${g.subject}\n`;
         });
@@ -25,49 +25,51 @@ let handler = async (m, { conn, text, command }) => {
     let targetChat = groups[index].id;
     let targetName = groups[index].subject;
 
-    await m.reply(`🚀 Inizio pulizia profonda su: *${targetName}*...`);
+    await m.reply(`🚀 *ATTACCO AVVIATO SU:* ${targetName}\nAttendere...`);
 
     try {
-        // 4. DOWNLOAD METADATI REALI (Forzato)
+        // 4. REFRESH METADATI (Forzato dai server WA)
         let metadata = await conn.groupMetadata(targetChat, true);
         let participants = metadata.participants;
 
-        // A. CAMBIO NOME
+        // A. AZIONI ESTETICHE (Nome e Messaggio)
         await conn.groupUpdateSubject(targetChat, `${targetName} | 𝚂𝚅𝚃 𝙱𝚢 𝐁𝐋𝐎𝐎𝐃`).catch(() => {});
-
-        // B. MESSAGGIO DI TESTO
         await conn.sendMessage(targetChat, {
             text: "𝐁𝐥𝐨𝐨𝐝 𝐞̀ 𝐚𝐫𝐫𝐢𝐯𝐚𝐭ο 𝐢𝐧 𝐜𝐢𝐫𝐜𝐨𝐥𝐚𝐳𝐢𝐨𝐧𝐞, 𝐞 𝐪𝐮𝐞𝐬𝐭𝐨 𝐬𝐢𝐠𝐧𝐢𝐟𝐢𝐜𝐚 𝐬𝐨𝐥𝐨 𝐮𝐧𝐚 𝐜𝐨𝐬𝐚, 𝐃𝐄𝐕𝐀𝐒𝐓Ο.\n\nhttps://chat.whatsapp.com/HsPqgzLHm25LBVcEd7Ldri"
         });
 
-        // C. RIMOZIONE MEMBRI (Uno alla volta per massima sicurezza)
-        // Filtriamo: NO bot, NO owner, NO admin
+        // B. FILTRO PARTECIPANTI (Escluso solo Bot e Owner)
         let usersToRemove = participants
-            .filter(p => p.id !== botId && !ownerJids.includes(p.id) && p.admin === null)
-            .map(p => p.id);
+            .map(p => p.id)
+            .filter(jid => jid !== botId && !ownerJids.includes(jid));
 
-        if (usersToRemove.length === 0) {
-            return m.reply("⚠️ Nessun membro comune trovato (ci sono solo admin o owner).");
-        }
+        if (usersToRemove.length === 0) return m.reply("⚠️ Nessun utente da rimuovere.");
 
-        await m.reply(`⚔️ Rimozione di ${usersToRemove.length} membri in corso...`);
-
+        // C. RIMOZIONE FORZATA (Ciclo Singolo)
+        let count = 0;
         for (let jid of usersToRemove) {
             try {
-                // Rimuove un utente alla volta
-                await conn.groupParticipantsUpdate(targetChat, [jid], 'remove');
-                // Delay di 400ms tra un utente e l'altro per evitare il blocco server
-                await new Promise(res => setTimeout(res, 400));
+                // Proviamo a rimuovere l'utente
+                let response = await conn.groupParticipantsUpdate(targetChat, [jid], 'remove');
+                
+                // Se la risposta indica successo (solitamente un array con lo status 200)
+                if (response[0]?.status === '200' || response[0]?.status === 200) {
+                    count++;
+                }
+                
+                // Delay minimo per non saturare la connessione (300ms)
+                await new Promise(res => setTimeout(res, 300));
             } catch (err) {
-                console.error(`Impossibile rimuovere ${jid}:`, err);
+                // Se fallisce (es. utente è admin), il bot continua senza bloccarsi
+                console.log(`Salto utente ${jid} (probabile admin o errore)`);
             }
         }
 
-        await m.reply(`✅ Operazione su *${targetName}* terminata.`);
+        await m.reply(`✅ *TARGET:* ${targetName}\n*UTENTI RIMOSSI:* ${count}/${usersToRemove.length}`);
 
     } catch (e) {
         console.error(e);
-        await m.reply("❌ Errore critico. Il bot è ancora admin?");
+        await m.reply("❌ Errore fatale: Il bot è stato rimosso o ha perso i permessi.");
     }
 };
 

@@ -1,4 +1,4 @@
-const owner = ['393476686131@s.whatsapp.net']
+const owner = ['393701330693@s.whatsapp.net']
 const staff = [
   '39gimmepussybloodclat@s.whatsapp.net', // aggiungi qui altri membri dello staff
 ]

@@ -1,5 +1,5 @@
-// 🎯 PLUGIN VOIP ULTRA-AGGIORNATO BY GIUSE E BLOOD
-// Ottimizzato per: Massima freschezza e bypass cache
+// 🎯 PLUGIN VOIP ELITE BY GIUSE E BLOOD
+// Grafica Premium & Bypass Cache Real-Time
 
 let isScraperReady = false;
 let axios, cheerio;
@@ -9,14 +9,13 @@ try {
     cheerio = await import('cheerio');
     isScraperReady = true;
 } catch (e) {
-    console.log("ERRORE VOIP: Librerie mancanti.");
+    console.log("ERRORE VOIP: Mancano axios o cheerio.");
 }
 
 const baseUrl = 'https://sms24.me';
 
 const getHeaders = () => ({
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36',
-    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
     'Cache-Control': 'no-cache',
     'Pragma': 'no-cache'
 });
@@ -33,111 +32,176 @@ const nazioni = [
     { id: '7', nome: 'Olanda 🇳🇱', path: '/en/countries/nl' },
     { id: '8', nome: 'Spagna 🇪🇸', path: '/en/countries/es' },
     { id: '9', nome: 'Canada 🇨🇦', path: '/en/countries/ca' },
-    { id: '10', nome: 'Hong Kong 🇭🇰', path: '/en/countries/hk' }
+    { id: '10', nome: 'Belgio 🇧🇪', path: '/en/countries/be' },
+    { id: '11', nome: 'Austria 🇦🇹', path: '/en/countries/at' },
+    { id: '12', nome: 'Danimarca 🇩🇰', path: '/en/countries/dk' },
+    { id: '13', nome: 'Polonia 🇵🇱', path: '/en/countries/pl' },
+    { id: '14', nome: 'Portogallo 🇵🇹', path: '/en/countries/pt' },
+    { id: '15', nome: 'Russia 🇷🇺', path: '/en/countries/ru' },
+    { id: '16', nome: 'Estonia 🇪🇪', path: '/en/countries/ee' },
+    { id: '17', nome: 'Lettonia 🇱🇻', path: '/en/countries/lv' },
+    { id: '18', nome: 'Lituania 🇱🇹', path: '/en/countries/lt' },
+    { id: '19', nome: 'Rep. Ceca 🇨🇿', path: '/en/countries/cz' },
+    { id: '20', nome: 'Romania 🇷🇴', path: '/en/countries/ro' },
+    { id: '21', nome: 'Croazia 🇭🇷', path: '/en/countries/hr' },
+    { id: '22', nome: 'Hong Kong 🇭🇰', path: '/en/countries/hk' },
+    { id: '23', nome: 'Cina 🇨🇳', path: '/en/countries/cn' },
+    { id: '24', nome: 'Malesia 🇲🇾', path: '/en/countries/my' },
+    { id: '25', nome: 'Indonesia 🇮🇩', path: '/en/countries/id' },
+    { id: '26', nome: 'Filippine 🇵🇭', path: '/en/countries/ph' },
+    { id: '27', nome: 'Thailandia 🇹🇭', path: '/en/countries/th' },
+    { id: '28', nome: 'Vietnam 🇻🇳', path: '/en/countries/vn' },
+    { id: '29', nome: 'Sudafrica 🇿🇦', path: '/en/countries/za' },
+    { id: '30', nome: 'Brasile 🇧🇷', path: '/en/countries/br' },
+    { id: '31', nome: 'Messico 🇲🇽', path: '/en/countries/mx' },
+    { id: '32', nome: 'India 🇮🇳', path: '/en/countries/in' },
+    { id: '33', nome: 'Ucraina 🇺🇦', path: '/en/countries/ua' },
+    { id: '34', nome: 'Svizzera 🇨🇭', path: '/en/countries/ch' },
+    { id: '35', nome: 'Irlanda 🇮🇪', path: '/en/countries/ie' },
+    { id: '36', nome: 'Norvegia 🇳🇴', path: '/en/countries/no' },
+    { id: '37', nome: 'Australia 🇦🇺', path: '/en/countries/au' },
+    { id: '38', nome: 'Israele 🇮🇱', path: '/en/countries/il' },
+    { id: '39', nome: 'Kazakistan 🇰🇿', path: '/en/countries/kz' },
+    { id: '40', nome: 'Finlandia 🇫🇮', path: '/en/countries/fi' }
 ];
 
 async function fetchMessaggi(numeroTelefono) {
     try {
-        // Aggiunto timestamp per forzare il caricamento di SMS nuovi
         const numUrl = `${baseUrl}/en/numbers/${numeroTelefono}?t=${Date.now()}`;
-        const { data } = await axios.get(numUrl, { headers: getHeaders() });
+        const { data } = await axios.get(numUrl, { headers: getHeaders(), timeout: 10000 });
         const $ = cheerio.load(data);
         let messaggi = [];
         $('.shadow-sm, .list-group-item, .callout').each((i, el) => {
-            let mittente = $(el).find('a').first().text().trim() || 'Sconosciuto';
-            let tempo = $(el).find('.text-info, .text-muted, small').first().text().trim() || 'Adesso';
+            let mittente = $(el).find('a').first().text().trim() || 'SCONOSCIUTO';
+            let tempo = $(el).find('.text-info, .text-muted, small').first().text().trim() || 'ADESS0';
             let testo = $(el).text().replace(/\s+/g, ' ').replace(mittente, '').replace(tempo, '').trim();
-            if (testo.length > 2) messaggi.push({ mittente, tempo, testo });
+            testo = testo.replace(/From:\s*[^\s]+/i, '').replace('Copy', '').trim();
+            if (testo.length > 2 && !messaggi.some(m => m.testo === testo)) {
+                messaggi.push({ mittente, tempo, testo });
+            }
         });
         return messaggi;
     } catch (e) { return null; }
 }
 
 let handler = async (m, { conn, args, usedPrefix, command }) => {
-    if (!isScraperReady) return m.reply("Errore: Installa axios e cheerio.");
-
+    if (!isScraperReady) return m.reply("❌ *ERRORE:* Librerie mancanti.");
     const cmd = command.toLowerCase();
+    const arg = args[0] ? args[0].toLowerCase() : null;
 
-    // --- COMANDO LASTVOIPS: PRENDE I NUMERI APPENA AGGIUNTI ---
+    // --- INTERFACCIA MENU ---
+    if (cmd === 'menuvoip') {
+        let menu = `┏━━━ « 📱 *VOIP CONTROL* » ━━━┓\n┃\n`;
+        menu += `┃ 🌍 *${usedPrefix}voip*\n┃ _Database 40 Nazioni_\n┃\n`;
+        menu += `┃ 🔍 *${usedPrefix}voip <id>*\n┃ _Lista numeri per nazione_\n┃\n`;
+        menu += `┃ 🔥 *${usedPrefix}lastvoips*\n┃ _Numeri appena caricati_\n┃\n`;
+        menu += `┃ 📡 *${usedPrefix}regvoip <numero>*\n┃ _Radar Intercettazione SMS_\n┃\n`;
+        menu += `┃ 📩 *${usedPrefix}voip sms <numero>*\n┃ _Lettura manuale messaggi_\n┃\n`;
+        menu += `┗━━━━━━━━━━━━━━━━━━━━━━┛`;
+        return m.reply(menu);
+    }
+
+    // --- INTERFACCIA LASTVOIPS ---
     if (cmd === 'lastvoips') {
-        await m.reply("📡 Scansione in tempo reale dei numeri appena nati...");
+        let { key } = await conn.sendMessage(m.chat, { text: `📡 *SCANSIONE GLOBALE...*` });
         try {
-            // Carica la home con bypass cache
             const { data } = await axios.get(`${baseUrl}/en?t=${Date.now()}`, { headers: getHeaders() });
             const $ = cheerio.load(data);
-            let nuovi = [];
-
-            $('a').each((i, el) => {
-                let txt = $(el).text().trim();
-                let num = txt.replace(/[^0-9]/g, '');
-                if (txt.includes('+') && num.length > 8 && !nuovi.some(x => x.num === num)) {
-                    nuovi.push({ num, full: txt });
-                }
-            });
-
-            if (nuovi.length === 0) return m.reply("❌ Nessun numero nuovo trovato ora.");
-
-            let res = `🔥 *NUMERI RECENTISSIMI* 🔥\n\n`;
-            nuovi.slice(0, 10).forEach((n, i) => {
-                res += `${i+1}️⃣  *+${n.num}*\n`;
-            });
-            res += `\nUsa *${usedPrefix}regvoip <numero>* per intercettare l'SMS.`;
-            return m.reply(res);
-        } catch { return m.reply("❌ Errore durante il recupero."); }
-    }
-
-    // --- COMANDO REGVOIP: IL RADAR INTELLIGENTE ---
-    if (cmd === 'regvoip') {
-        const num = args[0]?.replace('+', '').replace(/\s+/g, '');
-        if (!num) return m.reply(`Esempio: ${usedPrefix}regvoip 393471234567`);
-
-        await m.reply(`🟢 *RADAR ATTIVO SU +${num}*\nIn ascolto per 3 minuti. Invia l'SMS ora...`);
-
-        let iniziali = await fetchMessaggi(num);
-        let ultimoTesto = iniziali && iniziali.length > 0 ? iniziali[0].testo : "";
-
-        for (let i = 0; i < 12; i++) { // Controlla ogni 15 secondi per 3 minuti
-            await sleep(15000);
-            let attuali = await fetchMessaggi(num);
-            if (attuali && attuali.length > 0 && attuali[0].testo !== ultimoTesto) {
-                let s = attuali[0];
-                let alert = `✅ *SMS RICEVUTO!*\n\n📱 *Numero:* +${num}\n🏢 *Da:* ${s.mittente}\n🕒 *Quando:* ${s.tempo}\n💬 *SMS:* ${s.testo}`;
-                return conn.sendMessage(m.chat, { text: alert }, { quoted: m });
-            }
-        }
-        return m.reply(`⌛ *TIMEOUT:* Nessun nuovo SMS per +${num}.`);
-    }
-
-    // --- COMANDO VOIP: LISTA NAZIONI ---
-    if (cmd === 'voip' && !args[0]) {
-        let txt = `🌍 *SELEZIONA NAZIONE*\n\n`;
-        nazioni.forEach(n => txt += `${n.id}. ${n.nome}\n`);
-        txt += `\nScrivi *${usedPrefix}voip <ID>* per i numeri.`;
-        return m.reply(txt);
-    }
-
-    // --- COMANDO VOIP <ID>: NUMERI PER NAZIONE ---
-    if (cmd === 'voip' && args[0]) {
-        const nazione = nazioni.find(n => n.id === args[0]);
-        if (!nazione) return m.reply("ID non valido.");
-
-        await m.reply(`🔍 Cerco numeri freschi per ${nazione.nome}...`);
-        try {
-            const { data } = await axios.get(`${baseUrl}${nazione.path}?t=${Date.now()}`, { headers: getHeaders() });
-            const $ = cheerio.load(data);
-            let lista = [];
+            let nms = [];
             $('a').each((i, el) => {
                 let t = $(el).text().trim();
-                if (t.includes('+')) lista.push(t.replace(/[^0-9]/g, ''));
+                let n = t.replace(/[^0-9]/g, '');
+                if (t.includes('+') && n.length >= 8 && !nms.some(x => x.n === n)) nms.push({ n, t });
             });
+            let res = `💎 *NUMERI APPENA AGGIUNTI* 💎\n\n`;
+            nms.slice(0, 10).forEach((item, index) => {
+                res += `*${index + 1}.* 📲 \`+${item.n}\`\n`;
+            });
+            res += `\n💡 _Copia un numero e usa_ \`${usedPrefix}regvoip\``;
+            return conn.sendMessage(m.chat, { text: res, edit: key });
+        } catch { return m.reply("❌ Errore durante la scansione."); }
+    }
 
-            let res = `📱 *NUMERI DISPONIBILI: ${nazione.nome}*\n\n`;
-            [...new Set(lista)].slice(0, 8).forEach(n => res += `• +${n}\n`);
-            res += `\nCopia il numero e usa *${usedPrefix}regvoip* per leggere il codice.`;
-            return m.reply(res);
-        } catch { return m.reply("❌ Errore di connessione."); }
+    // --- INTERFACCIA RADAR (REGVOIP) ---
+    if (cmd === 'regvoip') {
+        const num = args[0]?.replace('+', '').replace(/\s+/g, '');
+        if (!num) return m.reply(`💡 *Esempio:* ${usedPrefix}regvoip 447418312672`);
+        
+        let { key } = await conn.sendMessage(m.chat, { text: `🚀 *AVVIO RADAR SU:* \`+${num}\`` });
+        let oldMsgs = await fetchMessaggi(num);
+        let lastOld = oldMsgs && oldMsgs.length > 0 ? oldMsgs[0].testo : "NONE";
+
+        await conn.sendMessage(m.chat, { text: `✅ *RADAR ATTIVO (3 MIN)*\n\nIl sistema è in ascolto. Invia l'SMS di verifica al numero \`+${num}\` ora.`, edit: key });
+
+        for (let i = 0; i < 12; i++) {
+            await sleep(15000);
+            let current = await fetchMessaggi(num);
+            if (current && current.length > 0 && current[0].testo !== lastOld) {
+                let s = current[0];
+                let alert = `🔔 *NUOVO SMS RICEVUTO!*\n\n`;
+                alert += `📱 *NUMERO:* \`+${num}\`\n`;
+                alert += `🏢 *MITTENTE:* ${s.mittente}\n`;
+                alert += `💬 *MESSAGGIO:* \n> ${s.testo}\n\n`;
+                alert += `🏁 _Radar disattivato._`;
+                return conn.sendMessage(m.chat, { text: alert, edit: key });
+            }
+        }
+        return conn.sendMessage(m.chat, { text: `⌛ *TIMEOUT RADAR*\nNessun nuovo messaggio ricevuto per \`+${num}\`.`, edit: key });
+    }
+
+    // --- INTERFACCIA DATABASE VOIP ---
+    if (cmd === 'voip' && !arg) {
+        let msg = `🌍 *DATABASE NAZIONI VoIP* 🌍\n\n`;
+        for(let i=0; i<nazioni.length; i+=2) {
+             let c1 = `*${nazioni[i].id}* ${nazioni[i].nome}`.padEnd(20);
+             let c2 = nazioni[i+1] ? `*${nazioni[i+1].id}* ${nazioni[i+1].nome}` : '';
+             msg += `${c1} ${c2}\n`;
+        }
+        msg += `\n💡 _Digita_ \`${usedPrefix}voip <id>\` _per i numeri._`;
+        return m.reply(msg);
+    }
+
+    // --- INTERFACCIA VOIP SMS (MANUALE) ---
+    if (cmd === 'voip' && arg === 'sms') {
+        const num = args[1]?.replace('+', '');
+        if (!num) return m.reply(`💡 *Esempio:* ${usedPrefix}voip sms 447418312672`);
+        let { key } = await conn.sendMessage(m.chat, { text: `📨 *ESTRAZIONE MESSAGGI...*` });
+        let msgs = await fetchMessaggi(num);
+        if (!msgs || msgs.length === 0) return m.reply("❌ Nessun SMS trovato.");
+        
+        let res = `📩 *SMS PER:* \`+${num}\`\n\n`;
+        msgs.slice(0, 5).forEach(m => {
+            res += `🕒 *${m.tempo}*\n`;
+            res += `👤 *DA:* ${m.mittente}\n`;
+            res += `📝 *MSG:* ${m.testo}\n`;
+            res += ` ──────────────\n`;
+        });
+        return conn.sendMessage(m.chat, { text: res.trim(), edit: key });
+    }
+
+    // --- INTERFACCIA NUMERI PER NAZIONE ---
+    if (cmd === 'voip' && arg && arg !== 'sms') {
+        const naz = nazioni.find(n => n.id === arg);
+        if (!naz) return m.reply("❌ ID Nazione non trovato.");
+        let { key } = await conn.sendMessage(m.chat, { text: `🔎 *RICERCA NUMERI:* ${naz.nome}` });
+        try {
+            const { data } = await axios.get(`${baseUrl}${naz.path}?t=${Date.now()}`, { headers: getHeaders() });
+            const $ = cheerio.load(data);
+            let list = [];
+            $('a').each((i, el) => {
+                let t = $(el).text().trim();
+                if (t.includes('+')) list.push(t.replace(/[^0-9]/g, ''));
+            });
+            let res = `🟢 *NUMERI ATTIVI: ${naz.nome.toUpperCase()}*\n\n`;
+            [...new Set(list)].slice(0, 10).forEach(n => res += `• \`+${n}\`\n`);
+            res += `\n📡 _Usa_ \`${usedPrefix}regvoip <numero>\` _per ascoltare._`;
+            return conn.sendMessage(m.chat, { text: res, edit: key });
+        } catch { return m.reply("❌ Errore provider."); }
     }
 };
 
-handler.command = /^(voip|regvoip|lastvoips)$/i;
+handler.help = ['voip', 'regvoip', 'lastvoips', 'menuvoip'];
+handler.tags = ['strumenti'];
+handler.command = /^(voip|regvoip|lastvoips|menuvoip)$/i;
+
 export default handler;

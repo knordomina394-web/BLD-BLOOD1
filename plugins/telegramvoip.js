@@ -1,5 +1,5 @@
-// 🎯 PLUGIN VOIP ELITE BY GIUSE E BLOOD
-// Grafica Premium & Bypass Cache Real-Time
+// 🎯 PLUGIN VOIP ELITE V2 - AUTO-REFRESH & MAX-NUMBERS
+// Powered by Giuse & Blood - Grafica Ultra-Clean
 
 let isScraperReady = false;
 let axios, cheerio;
@@ -9,7 +9,7 @@ try {
     cheerio = await import('cheerio');
     isScraperReady = true;
 } catch (e) {
-    console.log("ERRORE VOIP: Mancano axios o cheerio.");
+    console.log("ERRORE VOIP: Librerie mancanti.");
 }
 
 const baseUrl = 'https://sms24.me';
@@ -89,67 +89,75 @@ let handler = async (m, { conn, args, usedPrefix, command }) => {
     const cmd = command.toLowerCase();
     const arg = args[0] ? args[0].toLowerCase() : null;
 
-    // --- INTERFACCIA MENU ---
+    // --- MENU PRINCIPALE ---
     if (cmd === 'menuvoip') {
-        let menu = `┏━━━ « 📱 *VOIP CONTROL* » ━━━┓\n┃\n`;
+        let menu = `┏━━━ « 📱 *VOIP PANEL* » ━━━┓\n┃\n`;
         menu += `┃ 🌍 *${usedPrefix}voip*\n┃ _Database 40 Nazioni_\n┃\n`;
-        menu += `┃ 🔍 *${usedPrefix}voip <id>*\n┃ _Lista numeri per nazione_\n┃\n`;
-        menu += `┃ 🔥 *${usedPrefix}lastvoips*\n┃ _Numeri appena caricati_\n┃\n`;
-        menu += `┃ 📡 *${usedPrefix}regvoip <numero>*\n┃ _Radar Intercettazione SMS_\n┃\n`;
+        menu += `┃ 🔍 *${usedPrefix}voip <id>*\n┃ _Numeri filtrati per Paese_\n┃\n`;
+        menu += `┃ 🔥 *${usedPrefix}lastvoips*\n┃ _Top 20 Numeri in tempo reale_\n┃\n`;
+        menu += `┃ 📡 *${usedPrefix}regvoip <numero>*\n┃ _Radar Intercettazione Code_\n┃\n`;
         menu += `┃ 📩 *${usedPrefix}voip sms <numero>*\n┃ _Lettura manuale messaggi_\n┃\n`;
         menu += `┗━━━━━━━━━━━━━━━━━━━━━━┛`;
         return m.reply(menu);
     }
 
-    // --- INTERFACCIA LASTVOIPS ---
+    // --- LASTVOIPS: PRENDE TUTTO QUELLO CHE C'E' DI NUOVO ---
     if (cmd === 'lastvoips') {
-        let { key } = await conn.sendMessage(m.chat, { text: `📡 *SCANSIONE GLOBALE...*` });
+        let { key } = await conn.sendMessage(m.chat, { text: `📡 *SINCRONIZZAZIONE NUMERI RECENTI...*` });
         try {
+            // Timestamp per forzare il refresh ed eliminare i vecchi dalla cache del provider
             const { data } = await axios.get(`${baseUrl}/en?t=${Date.now()}`, { headers: getHeaders() });
             const $ = cheerio.load(data);
             let nms = [];
+            
             $('a').each((i, el) => {
                 let t = $(el).text().trim();
                 let n = t.replace(/[^0-9]/g, '');
-                if (t.includes('+') && n.length >= 8 && !nms.some(x => x.n === n)) nms.push({ n, t });
+                if (t.includes('+') && n.length >= 8 && !nms.some(x => x.n === n)) {
+                    nms.push({ n, t });
+                }
             });
-            let res = `💎 *NUMERI APPENA AGGIUNTI* 💎\n\n`;
-            nms.slice(0, 10).forEach((item, index) => {
+
+            if (nms.length === 0) return m.reply("❌ Al momento non ci sono numeri nuovi disponibili.");
+
+            let res = `🔥 *NUMERI RECENTI (LIVE)* 🔥\n\n`;
+            // Mostra fino a 20 numeri (più possibile)
+            nms.slice(0, 20).forEach((item, index) => {
                 res += `*${index + 1}.* 📲 \`+${item.n}\`\n`;
             });
-            res += `\n💡 _Copia un numero e usa_ \`${usedPrefix}regvoip\``;
+            res += `\n⚠️ _I numeri vecchi vengono rimossi automaticamente ad ogni scansione._`;
             return conn.sendMessage(m.chat, { text: res, edit: key });
-        } catch { return m.reply("❌ Errore durante la scansione."); }
+        } catch { return m.reply("❌ Errore critico nel recupero dati."); }
     }
 
-    // --- INTERFACCIA RADAR (REGVOIP) ---
+    // --- RADAR REGVOIP ---
     if (cmd === 'regvoip') {
         const num = args[0]?.replace('+', '').replace(/\s+/g, '');
-        if (!num) return m.reply(`💡 *Esempio:* ${usedPrefix}regvoip 447418312672`);
+        if (!num) return m.reply(`💡 *Uso:* ${usedPrefix}regvoip 447418312672`);
         
-        let { key } = await conn.sendMessage(m.chat, { text: `🚀 *AVVIO RADAR SU:* \`+${num}\`` });
+        let { key } = await conn.sendMessage(m.chat, { text: `🚀 *TARGET:* \`+${num}\`\n*STATO:* Inizializzazione Radar...` });
         let oldMsgs = await fetchMessaggi(num);
         let lastOld = oldMsgs && oldMsgs.length > 0 ? oldMsgs[0].testo : "NONE";
 
-        await conn.sendMessage(m.chat, { text: `✅ *RADAR ATTIVO (3 MIN)*\n\nIl sistema è in ascolto. Invia l'SMS di verifica al numero \`+${num}\` ora.`, edit: key });
+        await conn.sendMessage(m.chat, { text: `✅ *RADAR ATTIVO*\n\nIn attesa di nuovi SMS per \`+${num}\`...\nTempo rimasto: 3 minuti.`, edit: key });
 
-        for (let i = 0; i < 12; i++) {
-            await sleep(15000);
+        for (let i = 0; i < 18; i++) { // 18 cicli da 10 secondi = 3 minuti
+            await sleep(10000);
             let current = await fetchMessaggi(num);
             if (current && current.length > 0 && current[0].testo !== lastOld) {
                 let s = current[0];
-                let alert = `🔔 *NUOVO SMS RICEVUTO!*\n\n`;
-                alert += `📱 *NUMERO:* \`+${num}\`\n`;
-                alert += `🏢 *MITTENTE:* ${s.mittente}\n`;
-                alert += `💬 *MESSAGGIO:* \n> ${s.testo}\n\n`;
-                alert += `🏁 _Radar disattivato._`;
+                let alert = `🔔 *SMS INTERCETTATO!* 🔔\n\n`;
+                alert += `📱 *TARGET:* \`+${num}\`\n`;
+                alert += `👤 *DA:* ${s.mittente}\n`;
+                alert += `💬 *MSG:* \n> ${s.testo}\n\n`;
+                alert += `✨ _Operazione completata._`;
                 return conn.sendMessage(m.chat, { text: alert, edit: key });
             }
         }
-        return conn.sendMessage(m.chat, { text: `⌛ *TIMEOUT RADAR*\nNessun nuovo messaggio ricevuto per \`+${num}\`.`, edit: key });
+        return conn.sendMessage(m.chat, { text: `⌛ *RADAR TIMEOUT*\nNessun nuovo codice ricevuto per \`+${num}\`. Prova un altro numero con \`${usedPrefix}lastvoips\``, edit: key });
     }
 
-    // --- INTERFACCIA DATABASE VOIP ---
+    // --- DATABASE COMPLETO NAZIONI ---
     if (cmd === 'voip' && !arg) {
         let msg = `🌍 *DATABASE NAZIONI VoIP* 🌍\n\n`;
         for(let i=0; i<nazioni.length; i+=2) {
@@ -157,33 +165,33 @@ let handler = async (m, { conn, args, usedPrefix, command }) => {
              let c2 = nazioni[i+1] ? `*${nazioni[i+1].id}* ${nazioni[i+1].nome}` : '';
              msg += `${c1} ${c2}\n`;
         }
-        msg += `\n💡 _Digita_ \`${usedPrefix}voip <id>\` _per i numeri._`;
+        msg += `\n💡 _Digita_ \`${usedPrefix}voip <id>\` _per estrarre i numeri._`;
         return m.reply(msg);
     }
 
-    // --- INTERFACCIA VOIP SMS (MANUALE) ---
+    // --- VOIP SMS MANUALE ---
     if (cmd === 'voip' && arg === 'sms') {
         const num = args[1]?.replace('+', '');
         if (!num) return m.reply(`💡 *Esempio:* ${usedPrefix}voip sms 447418312672`);
         let { key } = await conn.sendMessage(m.chat, { text: `📨 *ESTRAZIONE MESSAGGI...*` });
         let msgs = await fetchMessaggi(num);
-        if (!msgs || msgs.length === 0) return m.reply("❌ Nessun SMS trovato.");
+        if (!msgs || msgs.length === 0) return m.reply("❌ Nessun SMS trovato. Il numero potrebbe essere scaduto.");
         
-        let res = `📩 *SMS PER:* \`+${num}\`\n\n`;
-        msgs.slice(0, 5).forEach(m => {
+        let res = `📩 *LOG MESSAGGI:* \`+${num}\`\n\n`;
+        msgs.slice(0, 7).forEach(m => {
             res += `🕒 *${m.tempo}*\n`;
             res += `👤 *DA:* ${m.mittente}\n`;
             res += `📝 *MSG:* ${m.testo}\n`;
-            res += ` ──────────────\n`;
+            res += ` ────────────────\n`;
         });
         return conn.sendMessage(m.chat, { text: res.trim(), edit: key });
     }
 
-    // --- INTERFACCIA NUMERI PER NAZIONE ---
+    // --- NUMERI PER NAZIONE (MASSIMIZZATI) ---
     if (cmd === 'voip' && arg && arg !== 'sms') {
         const naz = nazioni.find(n => n.id === arg);
-        if (!naz) return m.reply("❌ ID Nazione non trovato.");
-        let { key } = await conn.sendMessage(m.chat, { text: `🔎 *RICERCA NUMERI:* ${naz.nome}` });
+        if (!naz) return m.reply("❌ ID Nazione non trovato nel database.");
+        let { key } = await conn.sendMessage(m.chat, { text: `🔎 *SCANSIONE LIVE:* ${naz.nome}` });
         try {
             const { data } = await axios.get(`${baseUrl}${naz.path}?t=${Date.now()}`, { headers: getHeaders() });
             const $ = cheerio.load(data);
@@ -192,11 +200,15 @@ let handler = async (m, { conn, args, usedPrefix, command }) => {
                 let t = $(el).text().trim();
                 if (t.includes('+')) list.push(t.replace(/[^0-9]/g, ''));
             });
+
+            let finalNumbers = [...new Set(list)];
+            if (finalNumbers.length === 0) return m.reply("❌ Nessun numero attivo trovato per questa nazione.");
+
             let res = `🟢 *NUMERI ATTIVI: ${naz.nome.toUpperCase()}*\n\n`;
-            [...new Set(list)].slice(0, 10).forEach(n => res += `• \`+${n}\`\n`);
-            res += `\n📡 _Usa_ \`${usedPrefix}regvoip <numero>\` _per ascoltare._`;
+            finalNumbers.slice(0, 15).forEach(n => res += `• \`+${n}\`\n`);
+            res += `\n📡 _Usa_ \`${usedPrefix}regvoip <numero>\` _per attivare il radar._`;
             return conn.sendMessage(m.chat, { text: res, edit: key });
-        } catch { return m.reply("❌ Errore provider."); }
+        } catch { return m.reply("❌ Errore di connessione al provider."); }
     }
 };
 

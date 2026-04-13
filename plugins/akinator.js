@@ -1,64 +1,84 @@
-import { Aki } from 'aki-api'
-process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
-
 let handler = async (m, { conn, text, usedPrefix, command }) => {
-  conn.akinator = conn.akinator ? conn.akinator : {}
+  let nomeDelBot = global.db.data.nomedelbot || `𝖇𝖑𝖔𝖔𝖉𝖇𝖔𝖙`
   
-  // Rileva input da bottoni o testo
-  let scelta = m.msg?.selectedButtonId || m.msg?.contextInfo?.externalAdReply?.title || text?.trim()
-  if (scelta && scelta.includes(usedPrefix + command)) {
-      scelta = scelta.replace(usedPrefix + command, '').trim()
+  // Creiamo una sessione di gioco locale
+  conn.akiLocale = conn.akiLocale ? conn.akiLocale : {}
+
+  // Se l'utente vuole resettare
+  if (text === 'reset' || text === 'stop') {
+    delete conn.akiLocale[m.sender]
+    return m.reply("🔄 Sessione resettata. Pensa a un altro personaggio!")
   }
 
-  if (conn.akinator[m.sender]) {
-    let { aki, msg } = conn.akinator[m.sender]
-    if (scelta === 'stop') {
-        delete conn.akinator[m.sender]
-        return m.reply("Partita annullata.")
+  // Se c'è già una partita in corso
+  if (conn.akiLocale[m.sender]) {
+    let gioco = conn.akiLocale[m.sender]
+    
+    // Logica di avanzamento (Simulata)
+    gioco.step++
+    
+    // Quando arriva alla domanda 10, prova a indovinare
+    if (gioco.step >= 10) {
+       let finale = `🧞‍♂️ *HO DECISO!*\n\n`
+       finale += `Stai pensando a un personaggio famoso, vero?\n`
+       finale += `Purtroppo il mio server è sotto attacco da Cloudflare, ma scommetto che era qualcuno di leggendario!\n\n`
+       finale += `*Grazie per aver giocato con ${nomeDelBot}*`
+       delete conn.akiLocale[m.sender]
+       return m.reply(finale)
     }
 
-    try {
-      await aki.step(scelta)
-      if (aki.progress >= 80) {
-        await aki.win()
-        let p = aki.answers[0]
-        let txt = `🧞‍♂️ *L'HO PRESO!*\n\n👤 *Nome:* ${p.name}\n📝 *Desc:* ${p.description}`
-        await conn.sendMessage(m.chat, { image: { url: p.absolute_picture_path }, caption: txt }, { quoted: m })
-        delete conn.akinator[m.sender]
-        return
-      }
-      await inviaAki(conn, m, aki, usedPrefix, command)
-    } catch (e) {
-      delete conn.akinator[m.sender]
-      return m.reply("❌ Errore: Il server Akinator ha rifiutato la connessione.")
-    }
-  } else {
-    let aki = new Aki({ region: 'it' })
-    await aki.start()
-    conn.akinator[m.sender] = { aki }
-    await inviaAki(conn, m, aki, usedPrefix, command)
+    // Domande casuali per simulare il genio
+    let domande = [
+      "Il tuo personaggio è reale?",
+      "È un uomo?",
+      "Viene dall'Italia?",
+      "È un cantante?",
+      "Fa parte del mondo dei videogiochi?",
+      "Ha più di 30 anni?",
+      "Lo vedi spesso in TV?",
+      "È uno YouTuber?",
+      "Ha i capelli scuri?",
+      "È un personaggio di un anime?"
+    ]
+    
+    let q = domande[gioco.step] || "Mi sto avvicinando... è un personaggio positivo?"
+    return inviaTasti(conn, m, q, gioco.step + 1)
   }
+
+  // Avvio nuova partita
+  conn.akiLocale[m.sender] = { step: 0 }
+  let inizio = `*🧞‍♂️ BENVENUTO SU AKINATOR LOCAL!*\n\nIl sito ufficiale ci ha bloccato l'IP, ma io sono un Genio e giocherò con te lo stesso.\n\n*Domanda 1:* Il tuo personaggio è una persona reale?`
+  
+  return inviaTasti(conn, m, inizio, 1)
 }
 
-async function inviaAki(conn, m, aki, usedPrefix, command) {
-  let sections = [
-    { title: "Rispondi", rows: [
-        {title: "Sì", rowId: `${usedPrefix + command} 0`},
-        {title: "No", rowId: `${usedPrefix + command} 1`},
-        {title: "Non so", rowId: `${usedPrefix + command} 2`},
-        {title: "Probabile", rowId: `${usedPrefix + command} 3`},
-        {title: "Probabile No", rowId: `${usedPrefix + command} 4`},
-        {title: "STOP", rowId: `${usedPrefix + command} stop`}
-    ]}
+// Funzione Helper per i tasti (List Message o Buttons)
+async function inviaTasti(conn, m, testo, num) {
+  const sections = [
+    {
+      title: `Domanda n. ${num}`,
+      rows: [
+        {title: "Sì ✅", rowId: "si", description: "È corretto"},
+        {title: "No ❌", rowId: "no", description: "Non è così"},
+        {title: "Non so 🤷‍♂️", rowId: "boh", description: "Non ne sono sicuro"},
+        {title: "RESET 🔄", rowId: "reset", description: "Ricomincia da capo"}
+      ]
+    }
   ]
+
   const listMessage = {
-    text: `*🤖 AKINATOR*\n\n*Domanda:* ${aki.question}\n*Progresso:* ${Math.round(aki.progress)}%`,
-    footer: "Seleziona una risposta",
-    buttonText: "Scegli 🧞‍♂️",
+    text: testo,
+    footer: "Seleziona una risposta dalla lista",
+    title: "🧞‍♂️ AKINATOR GENIE",
+    buttonText: "RISPONDI",
     sections
   }
-  return await conn.sendMessage(m.chat, listMessage, { quoted: m })
+
+  return conn.sendMessage(m.chat, listMessage, { quoted: m })
 }
 
+handler.help = ['akinator']
+handler.tags = ['giochi']
 handler.command = /^(akinator|aki)$/i
+
 export default handler

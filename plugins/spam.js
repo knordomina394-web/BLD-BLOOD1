@@ -1,40 +1,33 @@
-/**
- * Plugin per inviare messaggi ripetuti (Spam)
- * Struttura compatibile con il tuo sistema di handler
- */
-
 let handler = async (m, { conn, text, usedPrefix, command }) => {
     try {
-        // Controllo se è presente il testo
-        if (!text) throw `『 📎 』 \`Inserisci il testo da spammare\`\n\n\`Esempio:\`\n*${usedPrefix + command} ciao a tutti*`
+        if (!text) throw `『 📎 』 \`Inserisci il testo da spammare\`\n\n\`Esempio:\`\n*${usedPrefix + command} messaggio*`
 
-        const spamCount = 40 // Numero di ripetizioni
+        const spamCount = 40 
         const messageToSpam = text.trim()
         
-        // Funzione per il ritardo (0.5 secondi)
+        // Funzione di attesa
         const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms))
 
-        // Ciclo di invio
         for (let i = 0; i < spamCount; i++) {
+            // Invio senza citazione (quoted) per rendere l'invio leggermente più fluido
             await conn.sendMessage(m.chat, { text: messageToSpam })
             
-            // Applica il micro-ritardo richiesto
-            await delay(500)
+            // 100ms è il limite di sicurezza per uno spam "veloce"
+            await delay(100)
         }
 
-        // Notifica opzionale al termine (puoi rimuoverla se preferisci il silenzio)
-        return m.reply(`✅ Operazione completata: 40 messaggi inviati.`)
+        return m.reply(`✅ Inviati 40 messaggi con intervallo di sicurezza (100ms).`)
 
     } catch (error) {
         console.error('Errore nel comando spam:', error)
         if (typeof error === 'string') return m.reply(error)
-        return m.reply(`⚠️ Si è verificato un errore durante l'esecuzione.`)
+        return m.reply(`⚠️ Errore durante l'invio.`)
     }
 }
 
-// Configurazione Handler
 handler.help = ['spam [testo]']
 handler.tags = ['strumenti']
 handler.command = /^spam$/i
+handler.register = true 
 
 export default handler

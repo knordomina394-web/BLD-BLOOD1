@@ -18,11 +18,10 @@ handler.before = async function (m, { conn, isAdmin, isOwner }) {
                m.message.imageMessage?.caption || 
                m.message.videoMessage?.caption || '').toLowerCase()
 
-    // Rimuove punteggiatura fastidiosa per beccare anche "p.o.r.c.o.d.i.o"
+    // Pulisce il testo da simboli per beccare anche p.o.r.c.o.d.i.o
     let cleanText = text.replace(/[\.\-\_\,\*\+\/]/g, '')
 
-    // REGEX ULTRA-POTENTE: Becca unite, staccate e con numeri (0 al posto di O)
-    // L'uso di \s* permette 0 o infiniti spazi tra le parole
+    // REGEX DEFINITIVA: Unite, staccate, numeri e dialetti
     const regexBlasfema = /(?:porc[oa]\s*(?:di[o0ò]|ges[uù]|crist[0o]|mad[0o]nna|mad[0o]nina|spirit[0o]\s*sant[0o]|papa|dio)|di[o0ò]\s*(?:cane|p[0o]rc[0o]|lurid[0o]|b[0o]ia|maiale|schif[0o]s[0o]|merda|str[0o]nz[0o]|serpente|infame|maledett[0o]|bestia|scroto|letame)|crist[0o]\s*(?:cane|p[0o]rc[0o]|b[0o]ia|inchi[0o]dat[0o]|appes[0o]|mort[0o])|mad[0o]nna\s*(?:puttana|tr[0o]ia|maiala|serpe|schif[0o]sa|maledetta|impestata|ladra)|mannaggia\s*(?:a\s*di[o0]|al\s*crist[0o]|alla\s*mad[0o]nna|a\s*ges[uù])|puttana\s*(?:la\s*mad[0o]nna|la\s*chiesa|la\s*evangelica)|di[o0]\s*(?:maledett[0o]|puzzolente|bastard[0o])|ges[uù]\s*(?:m[0o]rt[0o]|marci[0o]|appes[0o]|maledett[0o])|sangiuseppe\s*(?:fabbro|maledetto|cane)|p[0o]rc[0o]di[o0ò]|di[o0ò]cane|di[o0ò]p[0o]rc[0o]|crist[0o]cane|mad[0o]nnaputtana)/gi
     
     const matches = cleanText.match(regexBlasfema)
@@ -33,63 +32,33 @@ handler.before = async function (m, { conn, isAdmin, isOwner }) {
         chat.bestemmie.users[m.sender] = (chat.bestemmie.users[m.sender] || 0) + count
 
         const getSinRank = (n) => {
-            if (n > 500) return '🔥 LUCIFERO IN PERSONA'
+            if (n > 500) return '🔥 LUCIFERO'
             if (n > 200) return '👹 ARCIDEMONE'
-            if (n > 100) return '🔱 ERETICO SUPREMO'
-            if (n > 50) return '⛓️ ANIMA DANNATA'
-            if (n > 20) return '👺 PECCATORE SERIALE'
+            if (n > 100) return '🔱 ERETICO'
+            if (n > 50) return '⛓️ DANNATO'
+            if (n > 20) return '👺 PECCATORE'
             return '🤏 CHIERICHETTO'
         }
 
         const insulti = [
-            "L'inferno ti aspetta a braccia aperte.",
-            "Sento già l'odore di zolfo.",
-            "Il prete del tuo quartiere ha appena avuto un brivido.",
-            "Complimenti, un altro posto in paradiso cancellato.",
-            "Occhio che il fuoco brucia.",
-            "Tua madre sa che scrivi così? Vergogna."
+            "L'inferno ti aspetta.",
+            "Sento odore di zolfo.",
+            "Il prete ha avuto un brivido.",
+            "Posto in paradiso: CANCELLATO.",
+            "Vergogna, tua madre legge?",
+            "Un altro chiodo sulla croce."
         ]
         const randomInsult = insulti[Math.floor(Math.random() * insulti.length)]
-
         const tag = m.sender.split('@')[0]
-        let res =let res = `🔥 *BLASFEMIA* @${tag} ➔ \`+${count}\`\n`
-res += `📈 *Totale:* \`${user.bestemmie}\` | ${getSinRank(user.bestemmie)}\n`
-res += `💬 _"${randomInsult}"_`
 
+        // MESSAGGIO BREVE
+        let res = `🔥 *BLASFEMIA* @${tag} ➔ \`+${count}\`\n`
+        res += `📈 *Totale:* \`${user.bestemmie}\` | ${getSinRank(user.bestemmie)}\n`
+        res += `💬 _"${randomInsult}"_`
 
         await conn.reply(m.chat, res, m, { mentions: [m.sender] })
     }
     return true
-}
-
-handler.command = /^(bestemmie|classifica|inferno)$/i
-
-handler.all = async function (m, { conn, command }) {
-    if (!command) return
-    let chat = global.db.data.chats[m.chat]
-    if (!chat || !chat.bestemmiometro) return
-    
-    if (command === 'bestemmie' || command === 'classifica' || command === 'inferno') {
-        let userStats = Object.entries(chat.bestemmie.users)
-            .sort(([, a], [, b]) => b - a)
-            .slice(0, 10)
-
-        if (userStats.length === 0) return m.reply('😇 Il gruppo è ancora puro. Nessun peccatore rilevato.')
-
-        let leaderboard = `🩸 *GIRONI INFERNALI* 🩸\n`
-        leaderboard += `_Classifica dei peggiori bestemmiatori_\n`
-        leaderboard += `━━━━━━━━━━━━━━━\n\n`
-
-        userStats.forEach(([user, count], i) => {
-            let icon = i === 0 ? '👑' : i === 1 ? '🔱' : i === 2 ? '⚔️' : '💀'
-            leaderboard += `${icon} *${i + 1}.* @${user.split('@')[0]} ➔ \`${count}\` Peccati\n`
-        })
-
-        leaderboard += `\n━━━━━━━━━━━━━━━\n`
-        leaderboard += `🔥 *Olocausto Totale:* ${chat.bestemmie.total} bestemmie.`
-
-        await conn.reply(m.chat, leaderboard, m, { mentions: userStats.map(x => x[0]) })
-    }
 }
 
 export default handler

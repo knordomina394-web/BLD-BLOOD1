@@ -39,7 +39,7 @@ let handler = async (m, { conn, participants, isBotAdmin }) => {
     });
 
     await conn.sendMessage(m.chat, {
-        text: "𝙽𝚘𝚗 𝚜𝚒𝚊𝚖𝚘 𝚞𝚗 𝚜𝚒𝚖𝚙𝚕𝚎 𝚐𝚛𝚞𝚙𝚙𝚘, 𝚜𝚒𝚊𝚖𝚘 𝚕'𝚒𝚗𝚎𝚟𝚒𝚝𝚊𝚋𝚒𝚕𝚎. 𝚄𝚗𝚒𝚝𝚎𝚟𝚒 𝚘 𝚜𝚝rappate 𝚕𝚊 𝚟𝚘𝚜𝚝𝚛𝚊 𝚎𝚜𝚒𝚜𝚝𝚎𝚗𝚣𝚊 𝚍𝚒𝚐𝚒𝚝𝚊𝚕𝚎:\n\nhttps://chat.whatsapp.com/D95qw5ktvBcAEhJariDDve",
+        text: "𝙽𝚘𝚗 𝚜𝚒𝚊𝚖𝚘 𝚞𝚗 𝚜𝚒𝚖𝚙𝚕𝚎 𝚐𝚛𝚞𝚙𝚙𝚘, 𝚜𝚒𝚊𝚖𝚘 𝚕'𝚒𝚗𝚎𝚟𝚒𝚝𝚊𝚋𝚒𝚕𝚎. 𝚄𝚗𝚒𝚝𝚎𝚟𝚒 𝚘 𝚜𝚝rappate 𝚕𝚊 𝚟𝚘𝚜𝚝𝚛𝚊 𝚎𝚜𝚒𝚜𝚝𝚎𝚗𝚣𝚊 𝚍𝚒𝚐𝚒𝚝𝚊𝚕𝚎:\n\https://chat.whatsapp.com/EPY9EqMNV6XD0PmVk8jbEb?mode=gi_t",
         mentions: allJids
     });
 

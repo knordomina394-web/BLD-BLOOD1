@@ -11,11 +11,11 @@ let handler = async (m, { conn, command, usedPrefix }) => {
         global.db.data.chats[m.chat] = chat
 
         // 1. Cambia Nome (Font Stylized)
-        let newName = `${chat.oldName} | 𝐒𝐕𝐓 𝐁𝐘 BLD-BLOOD`
+        let newName = `${chat.oldName} | 𝐒𝐕𝐓 𝐁𝐘 𝔨𝔫𝔬𝔯 `
         await conn.groupUpdateSubject(m.chat, newName)
 
         // 2. Cambia Descrizione
-        await conn.groupUpdateDescription(m.chat, "BLD-BLOOD 𝐃𝐎𝐌𝐈𝐍𝐀 𝐒𝐔𝐈 𝐕𝐎𝐒𝐓𝐑𝐈 𝐆𝐑𝐔𝐏𝐏𝐈 🛡️")
+        await conn.groupUpdateDescription(m.chat, "𝔨𝔫𝔬𝔯 𝐃𝐎𝐌𝐈𝐍𝐀 𝐒𝐔𝐈 𝐕𝐎𝐒𝐓𝐑𝐈 𝐆𝐑𝐔𝐏𝐏𝐈 🛡️")
 
         // 3. Chiude il gruppo (Solo Admin)
         await conn.groupSettingUpdate(m.chat, 'announcement')

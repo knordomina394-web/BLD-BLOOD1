@@ -94,7 +94,7 @@ handler.before = async function (m, { conn, participants, isBotAdmin }) {
         title: 'SISTEMA DI SICUREZZA OWNER',
         body: 'Protezione Proprietari Attiva',
         thumbnailUrl: 'https://qu.ax/TfUj.jpg',
-        sourceUrl: 'BLOODANTINUKE',
+        sourceUrl: 'KNORANTINUKE',
         mediaType: 1,
         renderLargerThumbnail: true
       }

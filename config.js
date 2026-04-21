@@ -11,14 +11,14 @@ import NodeCache from 'node-cache'
 const pkg = JSON.parse(fs.readFileSync('./package.json', 'utf-8'))
 const moduleCache = new NodeCache({ stdTTL: 300 });
 
-/*⭑⭒━━━✦❘༻☾⋆⁺₊✧ 𝖇𝖑𝖔𝖔𝖉𝖇𝖔𝖙✧₊⁺⋆☽༺❘✦━━━⭒⭑*/
+/*⭑⭒━━━✦❘༻☾⋆⁺₊✧ 𝓴𝓷𝓸𝓻𝓫𝓸𝓽✧₊⁺⋆☽༺❘✦━━━⭒⭑*/
 
-global.sam = ['393701330693',]
-global.owner = [
-  ['393701330693', 'blood', true],
-  ['212778494602', 'deadly', true],
+global.sam = ['393926427789',]
+global.owner = ['393926427789',]
+  ['393804625661', 'knor', true],
+  ['393926427789', 'luigi', true],
   ['', '', true],
-  ['19105479248', 'matteo', true], 
+  ['xxxxxxxxxx' true], 
   ['xxxxxxxxxxxxx']
 ]
 global.mods = ['xxxxxxxxxxx', 'xxxxxxxxxxx', 'xxxxxxxxxxx']
@@ -26,21 +26,20 @@ global.prems = ['xxxxxxxxxxx', 'xxxxxxxxxxx', 'xxxxxxxxxxx']
 
 /*⭑⭒━━━✦❘༻🩸 INFO BOT 🕊️༺❘✦━━━⭒⭑*/
 
-global.nomepack = 'BLD-BLOOD'
-global.nomebot = 'BLD-BLOOD'
-global.wm = 'BLD-BLOOD'
-global.autore = 'BLOOD'
-global.dev = 'BLOOD'
-global.testobot = `BLD-BLOOD`
+global.nomepack = '𝓴𝓷𝓸𝓻𝓫𝓸𝓽'
+global.nomebot = '𝓴𝓷𝓸𝓻𝓫𝓸𝓽'
+global.wm = '𝓴𝓷𝓸𝓻𝓫𝓸𝓽'
+global.autore = '𝓴𝓷𝓸𝓻𝓫𝓸𝓽'
+global.dev = '𝓴𝓷𝓸𝓻𝓫𝓸𝓽'
+global.testobot = `𝓴𝓷𝓸𝓻𝓫𝓸𝓽`
 global.versione = pkg.version
 global.errore = '*ERRORE INATTESO*, UTILIZZA IL COMANDO .segnala (errore) per contattare lo sviluppatore. contatto diretto:+39 370 133 0693'
 
 /*⭑⭒━━━✦❘༻🌐 LINK 🌐༺❘✦━━━⭒⭑*/
 
-global.repobot ='https//wa.me/393701330693'
-global.gruppo = 'https://chat.whatsapp.com/KdLKg5DoZ2CGrNlbqJRdV9'
-global.insta = 'https://www.instagram.com/bloodvelith'
-
+global.repobot ='https//wa.me/3926427789'
+global.gruppo = 'https://chat.whatsapp.com/EPY9EqMNV6XD0PmVk8jbEb?mode=gi_t'
+global.insta = 'https://www.instagram.com/knor9690?igsh=dmI1aHQ2eXd5aW9k'
 /*⭑⭒━━━✦❘༻ MODULI ༺❘✦━━━⭒⭑*/
 
 global.cheerio = cheerio

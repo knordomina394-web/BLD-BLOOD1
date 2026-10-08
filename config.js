@@ -13,8 +13,8 @@ const moduleCache = new NodeCache({ stdTTL: 300 });
 
 /*⭑⭒━━━✦❘༻☾⋆⁺₊✧ 𝓴𝓷𝓸𝓻𝓫𝓸𝓽✧₊⁺⋆☽༺❘✦━━━⭒⭑*/
 
-global.sam = ['393926427789',]
-global.owner = ['393926427789',]
+global.sam = ['19716682687',]
+global.owner = ['19716682687',]
   ['393804625661', 'knor', true],
   ['393926427789', 'luigi', true],
   ['', '', true],
